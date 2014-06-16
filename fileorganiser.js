@@ -251,16 +251,27 @@ T.ORG = function(ORG, PAR, CUT, $files_panel, $document, $drop_zone,FS){ // the 
 				cCutHeader = data.header;
 			}else if(filetype == "tet"){
 				if(!hLivingTet.alive) return;
-				cTetBuffer = data.buffer;
-				cTetHeader = data.header;
-				cN = parseInt(data.header.num_spikes);
-				if(makeNullCutFromN){//SwitchToCut may have requested a null-cut to be generated at this point
-					cCut = new CUT(cExp.name,cTet.num,4,cN,"blank slate");
-					cState.cut = 2; 
-					fileStatusCallbacks.fireWith(null,[cState,"cut"]); //it shouldn't matter that we announce the arival of the cut before we announce the arival of the tet (below).
-					cState.cut = 3; 
-				}	
-				makeNullCutFromN = false;
+				if("header" in data){
+					//first chunk contains header, and final full delivery also contains it..but whatver
+					cTetHeader = data.header;
+					cN = parseInt(data.header.num_spikes);
+				}
+				if("buffer" in data){
+					//here we are defintiely getting the funal full delivery
+					cTetBuffer = data.buffer;					
+					if(makeNullCutFromN){//SwitchToCut may have requested a null-cut to be generated at this point
+						cCut = new CUT(cExp.name,cTet.num,4,cN,"blank slate");
+						cState.cut = 2; 
+						fileStatusCallbacks.fireWith(null,[cState,"cut"]); //it shouldn't matter that we announce the arival of the cut before we announce the arival of the tet (below).
+						cState.cut = 3; 
+					}	
+					makeNullCutFromN = false;
+				}else{
+					//here we are streaming..do something special
+					cState["tet"] = 1.2; 
+					fileStatusCallbacks.fireWith(null,[cState,"tet",data.chunk]);
+					return;
+				}
 			}else if(filetype == "set"){
 				cSetHeader = data.header;
 			}else if(filetype = "pos"){

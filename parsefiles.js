@@ -14,7 +14,7 @@ T.PAR = function(){
 		
 		var REGEX_HEADER_A = /((?:[\S\s](?!\r\ndata_start))*[\S\s])(\r\ndata_start)/
 		var REGEX_HEADER_B = /(\S*) ([\S ]*)/g
-
+		var CHUNK_SIZE = 10000*((50+4)*4);// Stream data from file in chunks of 10k spikes.
 		var ParseTetrodeFile = function(file, SPIKE_FORMAT, BYTES_PER_SPIKE){
 		
 			// Read the first 1024 bytes as a string to get the header and find the data start
@@ -38,10 +38,17 @@ T.PAR = function(){
     
             var N = header.num_spikes;
     	    var dataLen = parseInt(N)*BYTES_PER_SPIKE;
-        
-			//read the data section of the file as an array buffer
-    		var buffer = reader.readAsArrayBuffer(file.slice(dataStart,dataStart+dataLen)); 
 			
+			//stream the data section of the file as an array buffer in chunks
+			var buffer8 =  new Int8Array(dataLen);
+			for(var chunkOffset=0;dataLen>0;chunkOffset+=CHUNK_SIZE,dataLen-=CHUNK_SIZE){
+				var chunkLen = Math.min(dataLen,CHUNK_SIZE);
+				var chunk = reader.readAsArrayBuffer(file.slice(dataStart+chunkOffset,dataStart+chunkOffset+chunkLen)); 
+				var buffer8_sub = buffer8.subarray(chunkOffset,chunkOffset+chunkLen);
+				buffer8_sub.set(new Int8Array(chunk)); //copy chunk into buffer
+				main.TetrodeFileChunkRead(chunk,chunkOffset==0?header:undefined,[chunk]); //transfer chunk to main thread (we don't need it here any more). First chunk sent is accompanied by the header .
+			}
+    		var buffer = buffer8.buffer;
 			main.TetrodeFileRead(null,header,buffer,[buffer]);
 			
 		}
@@ -201,6 +208,15 @@ T.PAR = function(){
 			throw(errorMessage);
 		callbacks.tet.shift()({header:header,buffer:buffer});
 	}	
+	var TetrodeFileChunkRead = function(chunkBuffer,header){
+		var ret = {chunk:chunkBuffer};
+		if(header)
+			ret.header = header;
+		callbacks.tet[0](ret);  //send incoming chunks to the callback at the front of the queue,
+		// once the whole file is read, TetrodeFileRead will send the full message to the callback and shift it off the queue.
+		// only the first chunk callback and the TetrodeFileRead callback contaion the header.
+	}
+	
 	var GetTetrodeAmplitudeWithWorker = function(buffer,header,N,callback){
 		callbacks.tet.push(callback); 
 		buffer = buffer.slice(0); //we clone it so there is still a copy in the main thread;
@@ -248,7 +264,7 @@ T.PAR = function(){
 		callbacks.cut.shift()(fileName,expName,"cut",tet);
 	}
 	
-	var tetWorker = BuildBridgedWorker(tetWorkerCode,["ParseTetrodeFile","GetTetrodeAmplitude*"],["TetrodeFileRead*","GotTetAmps*"],[TetrodeFileRead,GotTetAmps]);	
+	var tetWorker = BuildBridgedWorker(tetWorkerCode,["ParseTetrodeFile","GetTetrodeAmplitude*"],["TetrodeFileRead*","GotTetAmps*","TetrodeFileChunkRead*"],[TetrodeFileRead,GotTetAmps,TetrodeFileChunkRead]);	
 	var posWorker = BuildBridgedWorker(posWorkerCode,["ParsePosFile"],["PosFileRead*"],[PosFileRead]);	
 	var cutWorker = BuildBridgedWorker(cutWorkerCode,["ParseCutFile","GetCutFileExpName"],["CutFileRead","CutFileGotExpName"],[CutFileRead, CutFileGotExpName]);	
 	var setWorker = BuildBridgedWorker(setWorkerCode,["ParseSetFile"],["SetFileRead"],[SetFileRead]);	

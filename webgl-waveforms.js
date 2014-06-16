@@ -215,21 +215,19 @@ T.WV = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,PALETTE_FLAG){
 		return new Uint8Array(A.buffer);
 	}
 	
-	var BuildVoltageDataBuffers_sub = function(oldData,newData,N){
+	
+	var BuildVoltageDataBuffers_sub = function(oldData,newData,N,n_start,n_end){
 		// This is "version 2" of this code, we now read from oldData continguously,
 		// and write out in strides, whereas previously we wrote out contiguously 
 		// and read in strides.  This is roughly 4x faster, but still seems slower 
 		// than it ought to be.  ~80ms for 80k spikes, i.e. only 1k spikes per ms for large N.
 		// Note that what we are doing is similar to a transpose in terms of memory movement.
-        // TODO: can hopefully speed up by having two 16bit views on the oldDara, offset by 1 byte
-        // and view the new data also as 16bit...need two views on oldData for odd and even t.
-        // then one final t-iteration outside t loop. Not sure whether to use two views of newData,
-        // offset by 2N-bytes or whether to just keep the same number of (explicit) adds as we 
-        //currently have. ...seems this may not be possible without slicing the oldData in order to
-        //start an int16array offset byt 1 byte.
+        // TODO: could possibly farm this out to a bunch of workers, get them to iterate over
+		// different chunks of spikes and then or-the newData back together
+			
 		var q = -1;
 		var N2 = 2*N;
-		for(var i=0;i<N;i++){ //for each spike
+		for(var i=n_start;i<n_end;i++){ //for each spike
 			var p = 2*i;
 			for(var c=0;c<4;c++){ //for each channel
 				q += 5;
@@ -242,30 +240,40 @@ T.WV = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,PALETTE_FLAG){
 		}
 	}
 	
-	var BuildVoltageDataBuffers = function(buffer,N){
+	var nSpikesProcessed = 0;
+	var voltageDataBufferArray = null;
+	var BuildVoltageDataBuffers = function(chunk,N){
 		// see UploadVoltage
-		var oldData = new Int8Array(buffer);
-		var newData = new Int8Array(4*(50-1)*N*2); //times 2 because each line has two ends
-		
-		BuildVoltageDataBuffers_sub(oldData,newData,N);
-		newData = Int8ToUint8(newData);
+		var oldData = new Int8Array(chunk);
+		var newData;
+		if(nSpikesProcessed==0)
+			newData = voltageDataBufferArray = new Int8Array(4*(50-1)*N*2); //times 2 because each line has two ends
+		else
+			newData = voltageDataBufferArray;
 			
-		var allBuffers = [];
-		for(var c=0; c<4;c++){ //for each channel
-			for(var t=0;t<50-1;t++){ //for each time point (except the last one)
-				var start = ((50-1)*c + t)*2*N;
-				allBuffers.push(newData.subarray(start,start+2*N));
-			}
-		}
+		var n_end = nSpikesProcessed+chunk.byteLength/((4+50)*4);
+		console.log("processing from " + nSpikesProcessed + " to " + n_end);
+		BuildVoltageDataBuffers_sub(oldData,newData,N,nSpikesProcessed,n_end);
+		nSpikesProcessed = n_end;
 		
-		return allBuffers;
+		if(n_end<N) return; //more chunks to come still
+		
+
 	}
 	
 	var UploadVoltage = function(buffer){
         //Fills the array of 196 webgl array buffers with vectors 2n in length, and of the form: v_1(t) v_1(t+1) v_2(t) v_2(t+1) v_3(t) ... v_n(t+1)
 		//For each of the 4 channels, t goes from 0 to 48, which is why we have 49*4 = 196 buffers.
-
-		var preparedData = BuildVoltageDataBuffers(buffer,N);
+		
+		var newData = Int8ToUint8(voltageDataBufferArray);
+			
+		var preparedData = [];
+		for(var c=0; c<4;c++){ //for each channel
+			for(var t=0;t<50-1;t++){ //for each time point (except the last one)
+				var start = ((50-1)*c + t)*2*N;
+				preparedData.push(newData.subarray(start,start+2*N));
+			}
+		}		
 		
     	for(var c=0; c<4;c++){ //for each channel
 			for(var t=0;t<50-1;t++){ //for each time point (except the last one)
@@ -284,7 +292,11 @@ T.WV = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,PALETTE_FLAG){
 		ready.voltage = false;
 		ready.cut = false;
 		cRender.alive = false; //stop render if there is one occuring
-
+		if(!N_val){
+			nSpikesProcessed = 0; //reset tet buffer streaming thing
+			voltageDataBufferArray = null;
+		}
+		
 		N = N_val;
         if(!ValidN(N)) return;
 		
@@ -702,14 +714,19 @@ T.WV = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,PALETTE_FLAG){
 	}
 	
 	
-	var FileStatusChange = function(status,filetype){
+	var FileStatusChange = function(status,filetype,chunk){
 		if(filetype == null && status.tet < 3)
 			LoadTetrodeData(null);	
 			
 		if(filetype == "tet"){
-			LoadTetrodeData(ORG.GetN(),ORG.GetTetBufferProjected());
-			if(status.cut == 3) //if we happened to have loaded the cut before the tet, we need to force to accept it now
-				ORG.GetCut().ForceChangeCallback(SlotsInvalidated);  //TODO: just invalidate all here directly
+			if(status.tet > 1 && status.tet < 2){
+				//streaming chunk
+				BuildVoltageDataBuffers(chunk,ORG.GetN());
+			}else{
+				LoadTetrodeData(ORG.GetN(),ORG.GetTetBufferProjected());
+				if(status.cut == 3) //if we happened to have loaded the cut before the tet, we need to force to accept it now
+					ORG.GetCut().ForceChangeCallback(SlotsInvalidated);  //TODO: just invalidate all here directly
+			}
 		}
 		
 	}

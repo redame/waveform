@@ -524,7 +524,7 @@ T.RM = function(BYTES_PER_SPIKE,BYTES_PER_POS_SAMPLE,POS_NAN,
 				LoadPosData(null);
 		}
 		
-		if(filetype == "tet"){
+		if(filetype == "tet" && status.tet >= 2){
 			LoadTetData(ORG.GetN(),ORG.GetTetTimes(),parseInt(ORG.GetTetHeader().duration));
 			
 			if(status.cut == 3 && status.pos == 3) ///if we happened to have loaded the cut before the tet and pos, we need to force T.RM to accept it now

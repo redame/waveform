@@ -260,7 +260,7 @@ T.TC = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG){
 		if(filetype == null && status.tet < 3)
 			LoadTetrodeData(0);
 			
-		if(filetype == "tet"){
+		if(filetype == "tet" && status.tet >=2){
 			LoadTetrodeData(ORG.GetN(),ORG.GetTetTimes());
 			
 			if(status.cut == 3) //if we happened to have loaded the cut before the tet, we need to accept the cut now

@@ -229,7 +229,7 @@ T.CP = function($canvasParent,ORG,PALETTE_B,PALETTE_FLAG){
 		if(filetype == null && status.tet < 3)
 				LoadTetrodeData(0);
 
-		if(filetype == "tet"){
+		if(filetype == "tet" && status.tet >= 2){
 			T.ORG.GetTetAmplitudes(function(amps){
 										LoadTetrodeData(ORG.GetN(),amps);
 										if(status.cut == 3)
