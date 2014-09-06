@@ -9,7 +9,7 @@ cutModified
 
 -->
 <link rel="import" href="polymer/polymer.html">
-
+<link rel="import" href="scrollable-area.html">
 
 <polymer-element name="file-organiser">
 <template>
@@ -40,7 +40,6 @@ cutModified
 	font-size: 12px;
 	}
 	.tet-navigation{
-	width: 100%;
 	margin: 3px;
 	font-size: 0;
 	}
@@ -79,12 +78,13 @@ cutModified
 	color: #005;
 	}
 	</style>
-	<div class="tet-navigation">
+	<scrollable-area>
+	<scrollable-area-top class="tet-navigation">
 		<div class="tet-title">tetrode:</div>
 		<template repeat="{{tet_num in available_tet_nums}}">
 			<div class="button button-tet" selected="{{active_tet_num == tet_num}}">{{tet_num}}</div>
 		</template>
-	</div>
+	</scrollable-area-top>
 	<template repeat="{{exp in exps}}">
 		<div class='button file-group' selected="{{active_exp == exp}}">
 			<div class="group_top">
@@ -100,6 +100,7 @@ cutModified
 			</div>
 			</div>
 	</template>
+	</scrollable-area>
 </template>
 
 <script>
