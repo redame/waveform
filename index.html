@@ -14,6 +14,8 @@
 <link rel="import" href="polymer/paper-slider.html">
 <link rel="import" href="tile-element.html">
 <link rel="import" href="cross-hair.html">
+<link rel="import" href="file-organiser.html">
+<link rel="import" href="scrollable-area.html">
 </head>
 
 <body>
@@ -237,14 +239,14 @@
 <div  flex horizontal layout>
 
 	<div class="side_panel" vertical layout>
-
+		<!--<file-organiser></file-organiser>-->
 		<div class="side_panel_row side_panel_row" vertical layout>
-			<div class='button_group above_scrollable_area' id='tet_list'>
+			<scrollable-area id="files_panel">
+			<scrollable-area-top id='tet_list'>
 				<div class='tetrode_title'>tetrode:</div>
-			</div>
-			<div class="scrollable_area" id="files_panel" flex>
+			</scrollable-area-top>
 			<div class='exp_list' id='exp_list'></div>
-			</div>
+			</scrollable-area>
 		</div>
 		
 		<core-splitter direction="up"></core-splitter>
@@ -265,7 +267,8 @@
 		<core-splitter direction="up"></core-splitter>
 		
 		<div class="side_panel_row side_panel_row" flex vertical layout>
-			<div class="cluster_info above_scrollable_area">
+			<scrollable-area>
+				<scrollable-area-top class='cluster_info'>
 					<div class="cluster_painter">
 						<core-tooltip label="destination group [e]" position="right">
 							<div class='cluster-sticker' id='painter-dest'>?</div> 
@@ -278,12 +281,13 @@
 						</core-tooltip>
 						}
 					</div>
-					<div class="cluster_others">
-					</div>
+					<div class="cluster_others"></div>
+				</scrollable-area-top>
+		
+				<div id="cluster_panel" class="grabbable">
+					<cross-hair id='cluster_crosshair' showBars=0></cross-hair>
 				</div>
-			<div id="cluster_panel" class="scrollable_area grabbable" flex>
-			<cross-hair id='cluster_crosshair' showBars=0></cross-hair>
-			</div>
+			</scrollable-area>
 		</div>
 	
 	</div>

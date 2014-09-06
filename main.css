@@ -119,13 +119,6 @@ max-height: 400px;
 .side_panel_row:last-of-type{
 height: 100%;
 }
-.above_scrolled_area{
-box-shadow: 0px 3px 10px 0px #bbb;
-position: relative;
-}
-.scrollable_area{
-overflow-y: scroll;
-}
 .slider_val{
 font-weight: bold;
 }
