@@ -21,6 +21,10 @@ font-size: 0.8em;
 -moz-user-select: -moz-none;
 -o-user-select: none;
 user-select: none;
+transition: opacity ease-in 0.2s;
+}
+body[unresolved]{
+opacity:0; display:block;overflow:hidden;
 }
 .info_summary{
     position: absolute;
@@ -140,71 +144,6 @@ background: #FCC;
 background: #FAA;
 }
 
-
-.file_drop{
-position: fixed;
-left: 0px;
-right: 0px;
-top: 0px;
-bottom: 0px;
-padding: 5px;
-display: block;
-text-align: center;
-background: #FFFFFF;
-color: #888;
-z-index: 100;
-}
-.file_drop:before{
-position: fixed;
-margin: 40px;
-border: 10px dashed #999;
-right: 0px;
-left: 0px;
-content: '';
-bottom: 0px;
-top: 0px;
-background: -moz-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 32%, rgba(255,255,255,1) 37%, rgba(255,255,255,0) 55%, rgba(255,255,255,0) 62%);
-background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(32%,rgba(255,255,255,1)), color-stop(37%,rgba(255,255,255,1)), color-stop(55%,rgba(255,255,255,0)), color-stop(62%,rgba(255,255,255,0)));
-background: -webkit-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 32%,rgba(255,255,255,1) 37%,rgba(255,255,255,0) 55%,rgba(255,255,255,0) 62%);
-background: -o-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 32%,rgba(255,255,255,1) 37%,rgba(255,255,255,0) 55%,rgba(255,255,255,0) 62%);
-background: -ms-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 32%,rgba(255,255,255,1) 37%,rgba(255,255,255,0) 55%,rgba(255,255,255,0) 62%);
-background: radial-gradient(ellipse at center,  rgba(255,255,255,1) 32%,rgba(255,255,255,1) 37%,rgba(255,255,255,0) 55%,rgba(255,255,255,0) 62%);
-filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#00ffffff',GradientType=1 );
-}
-.file_drop.alreadyUsed{
-    background: initial;
-}
-.file_drop.alreadyUsed:before{
-    border: 0px;
-}
-.drop_banner{
-    font-size: 4em;
-    position: absolute;
-    bottom: 130px;
-    text-align: center;
-    width: 100%;
-}
-.wibbly_wobbly{
-    -webkit-animation-name: 'spaceboots';
-    -webkit-animation-duration: 0.8s;
-	-webkit-transform-origin:50% 50%;
-	-webkit-animation-iteration-count: infinite;
-	-webkit-animation-timing-function: linear;    
-}
-.github_button_filedrop{
-    cursor: pointer;
-    margin: 20px 0px 0px 0px;
-    border: 1px solid #999;
-    display: inline-block;
-    padding: 4px 10px 4px 10px;
-    border-radius: 4px;
-    background: #eee;
-}
-.github_button_filedrop:hover{
-    background: #ddd;
-    border-color: #777;
-}
-.file_drop_text,
 .tilewall_text{
 margin: auto;
 position: absolute;

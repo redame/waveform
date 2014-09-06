@@ -7,11 +7,12 @@ It exposes an few important events which are fired whenever the user navigates b
 filesChanged
 cutModified
 
+statusMessageUpdate - this isn't fired very often. When file are availble it fires "No data selected. Choose a trial from the available files." later it may fire "Sorting and organising cut files..." and then null.
 -->
 <link rel="import" href="polymer/polymer.html">
 <link rel="import" href="scrollable-area.html">
 
-<polymer-element name="file-organiser">
+<polymer-element name="file-organiser" attributes='usefiledrop'>
 <template>
 	<style>
 	.button{
@@ -82,11 +83,11 @@ cutModified
 	<scrollable-area-top class="tet-navigation">
 		<div class="tet-title">tetrode:</div>
 		<template repeat="{{tet_num in available_tet_nums}}">
-			<div class="button button-tet" selected="{{active_tet_num == tet_num}}">{{tet_num}}</div>
+			<div class="button button-tet" selected="{{active_tet_num == tet_num}}" on-click="{{_tetButtonClick}}">{{tet_num}}</div>
 		</template>
 	</scrollable-area-top>
 	<template repeat="{{exp in exps}}">
-		<div class='button file-group' selected="{{active_exp == exp}}">
+		<div class='button file-group' selected="{{active_exp == exp}}" on-click="{{_fileGroupClick}}">
 			<div class="group_top">
 				<b>trial '{{exp.name}}'</b>
 				<template if={{exp.set_file}}><div class="brick brick-top">~.set</div></template>
@@ -104,8 +105,14 @@ cutModified
 </template>
 
 <script>
+var FilesDropped = function(e){
+	var fileList = e.detail;
+	console.dir(fileList);
+}
+
 Polymer('file-organiser',{
-	active_tet_num: 2,
+	active_tet_num: 0,
+	active_exp: null,
 	available_tet_nums: [1,2,3,4,5,6,7,12,14],
 	exps: [
 		{name: '2112 2014-02-03 1', 
@@ -117,7 +124,19 @@ Polymer('file-organiser',{
 		 tets: [undefined,{tet_file:"hello"},{tet_file:"hello"},undefined,{tet_file:"hello"}]
 			},
 		{name: '2112 2014-02-03 4',
-		 pos_file: "hello"}]
+		 pos_file: "hello"}],
+	_tetButtonClick: function(e, detail, sender) {this.active_tet_num = e.target.templateInstance.model.tet_num;},
+	_fileGroupClick: function(e, detail, sender) {this.active_exp = e.target.templateInstance.model.exp;},
+	active_tet_numChanged: function(from,to){
+	
+		console.log("need to switch to tet-" + to);
+	},
+	active_expChanged: function(from,to){
+		console.log("need to switch to exp " + to.name);
+	},
+	ready: function(){
+		document.getElementById(this.usefiledrop).addEventListener('filesdropped',FilesDropped.bind(this));
+	}
 })
 
 </script>

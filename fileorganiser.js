@@ -747,26 +747,10 @@ T.ORG = function(ORG, PAR, CUT, $files_panel, $document, $drop_zone,FS,$status_t
     var FileGroupClick = function(evt){
     	SwitchToExpTet($(this).data("EXP").name,cTet.num);
     }   
-    var dragEndTimer = 0;
+
     var haveDroppedAtLeastOnce = false;
-    var DocumentDragOver = function (evt) {
-		if(draggingOut)
-			return;
-        evt = evt.originalEvent;
-        evt.stopPropagation();
-        evt.preventDefault();
-        evt.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
-        $banner.toggleClass('wibbly_wobbly',true);
-        $drop_zone.show();
-        if(dragEndTimer)
-            clearTimeout(dragEndTimer)
-        dragEndTimer = setTimeout(DocumentDragEnd,500); //this should work because the drag over even is fired every few ms, even if it isn't we still see a bit of wobble at least
-    }
-    var DocumentDragEnd = function(evt){
-        $banner.toggleClass('wibbly_wobbly',false);
-        if(haveDroppedAtLeastOnce)
-            HideDropZone();
-    }
+
+
 	var draggingOut = false;
 	var SaveFileDragStart = function(evt){
 
@@ -817,8 +801,6 @@ T.ORG = function(ORG, PAR, CUT, $files_panel, $document, $drop_zone,FS,$status_t
 	window.URL = window.webkitURL || window.URL;
 	$files_panel.on("dragstart",".file_brick",SaveFileDragStart)
 				.on("dragend",".file_brick",SaveFileDragEnd);
-    $document.on("dragover", DocumentDragOver) 
-             .on("drop", DocumentDropFile);
     $files_panel.on("click",".file_group",FileGroupClick)
 				.on("click",".file_brick",FileBrickClick);
 	$tet_list.on('click','.button',TetrodeButtonClick);

@@ -16,9 +16,10 @@
 <link rel="import" href="cross-hair.html">
 <link rel="import" href="file-organiser.html">
 <link rel="import" href="scrollable-area.html">
+<link rel="import" href="file-drop.html">
 </head>
 
-<body>
+<body unresolved>
 <core-iconset id="meta"></core-iconset>
 
 
@@ -239,7 +240,7 @@
 <div  flex horizontal layout>
 
 	<div class="side_panel" vertical layout>
-		<file-organiser class="side_panel_row" vertical layout></file-organiser>
+		<file-organiser class="side_panel_row" usefiledrop='the_file_drop' vertical layout></file-organiser>
 		
 		<!--
 		<div class="side_panel_row side_panel_row" vertical layout>
@@ -308,21 +309,15 @@
 
 <core-icon-button icon="menu" class="menu_toggle"></core-icon-button>
 
-
-<div class="file_drop">
-<div id="filestem_caption"></div>
-<div class="file_drop_text"><div class="drop_banner">drag &amp; drop files here</div>
-the following types of data files are recognised: 
-<b><br>set | pos | tet | cut | clu</b><br>
-you can drag further files onto the window at any point<br>
-other file types will be ignored<br>
-<div class="github_button github_button_filedrop">Go to <b>quickstart guide</b> on GitHub</div>
-</div>
-<div id="works_with_chrome">Tested with Chrome <img src="chromelogo.png" width="15px"/></div>
-<div id="filesystem_buttons"> <button id="filesystem_button">turn on FileAPIs</button>
-<button id="filesystem_load_button" style="display: none;">use existing files</button>
-</div>
-</div>
+<file-drop id='the_file_drop' >
+    <file-drop-banner>drag &amp; drop files here</file-drop-banner>
+    <file-drop-badge>Tested with Chrome <img src="chromelogo.png" width="15px"/></file-drop-badge>
+    the following types of data files are recognised: 
+    <b><br>set | pos | tet | cut | clu</b><br>
+    you can drag further files onto the window at any point<br>
+    other file types will be ignored<br>
+    <a href="https://github.com/d1manson/waveform/tree/master#wiki" target="_blank">Go to <b>quickstart guide</b> on GitHub</a>
+</file-drop>
 
 
 <!-- public libraries and generic stuff for this app -->
