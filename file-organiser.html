@@ -1,0 +1,123 @@
+<!--
+CUSTOM ELEMENT: file organiser
+BY: DM
+
+This element presents an easy-to-naviagte list of all the data files that are avilable to the application (i.e. files that have been drag-dropped).
+It exposes an few important events which are fired whenever the user navigates between files:
+filesChanged
+cutModified
+
+-->
+<link rel="import" href="polymer/polymer.html">
+
+
+<polymer-element name="file-organiser">
+<template>
+	<style>
+	.button{
+	background: #f5f5f5;
+	padding: 5px 10px 5px 10px;
+	margin: 2px;
+	border: 1px solid #ccc;
+	cursor: pointer;
+	font-size: 12px;
+	}
+	.button-tet{
+	display: inline-block;
+	text-align: center;
+	}
+	.button:hover{
+	color: #C77;
+	border: 1px #C77 solid;
+	}
+	.button[selected=true]{
+	background: #ffffe0;
+	border: 1px #000 solid;
+	}
+	.tet-title{
+	display: inline-block;
+	padding-right: 5px;
+	font-size: 12px;
+	}
+	.tet-navigation{
+	width: 100%;
+	margin: 3px;
+	font-size: 0;
+	}
+	.brick{
+	display: inline-block;
+	border: 2px #000 solid;
+	padding: 2px;
+	margin: 2px;
+	background: #ddd;
+	cursor: default;
+	}
+	.brick-top{
+	margin: 0px;
+	padding: 0px 2px 0px 2px;
+	background: #ddb550;
+	border-color: #552510;
+	color: #552510;
+	}
+	.brick-tet{
+	color: #000;
+	}
+	.group_bottom{
+	font-size:0px;
+	}
+	.brick[selected=true]{
+	font-size:12px;
+	}
+	.brick-cut{
+	background: #fbb;
+	border-color: #500;
+	color: #500;
+	}
+	.brick-cut[isproperfile=true]{
+	background: #bbF;
+	border-color: #005;
+	color: #005;
+	}
+	</style>
+	<div class="tet-navigation">
+		<div class="tet-title">tetrode:</div>
+		<template repeat="{{tet_num in available_tet_nums}}">
+			<div class="button button-tet" selected="{{active_tet_num == tet_num}}">{{tet_num}}</div>
+		</template>
+	</div>
+	<template repeat="{{exp in exps}}">
+		<div class='button file-group' selected="{{active_exp == exp}}">
+			<div class="group_top">
+				<b>trial '{{exp.name}}'</b>
+				<template if={{exp.set_file}}><div class="brick brick-top">~.set</div></template>
+				<template if={{exp.pos_file}}><div class="brick brick-top">~.pos</div></template>
+			</div>
+			<div class="group_bottom">
+				<template repeat="{{tet,tet_num in exp.tets}}">
+					<template repeat="{{cut in tet.cuts}}"><div class="brick brick-cut" selected="{{active_tet_num == tet_num}}" isproperfile="{{cut.file_name != undefined}}">{{cut.disp_name}}<div> </template>
+					<template if={{tet.tet_file}}><div class="brick brick-tet" selected="{{active_tet_num == tet_num}}">~.{{tet_num}}</div></template>
+				</template>
+			</div>
+			</div>
+	</template>
+</template>
+
+<script>
+Polymer('file-organiser',{
+	active_tet_num: 2,
+	available_tet_nums: [1,2,3,4,5,6,7,12,14],
+	exps: [
+		{name: '2112 2014-02-03 1', 
+		 tets: [undefined,{tet_file:"hello",cuts:[{disp_name:"~x.cut"},{file_name:'thing',disp_name:"~a.cut"}]},{tet_file:"hello",cuts:[{disp_name:"~d.cut"}]},undefined,{},{tet_file:"hello"}]
+			},
+		{name: '2112 2014-02-03 2',
+		 set_file: "hello",
+		 pos_file: "hlo",
+		 tets: [undefined,{tet_file:"hello"},{tet_file:"hello"},undefined,{tet_file:"hello"}]
+			},
+		{name: '2112 2014-02-03 4',
+		 pos_file: "hello"}]
+})
+
+</script>
+</polymer-element>
