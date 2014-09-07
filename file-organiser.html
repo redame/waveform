@@ -136,7 +136,8 @@ Note we also have a file-brick element, but that is intended for private use wit
 					<template repeat="{{cut in tet.cuts}}"><file-brick colora="{{ cut.file != undefined ? '#500': '#005' }}" 
 																	   colorb="{{ cut.file != undefined ? '#fbb': '#bbf' }}" 
 															selected="{{active_tet_num == tet_num}}" 
-															isproperfile="{{}}"
+															draggable="{{ cut.inst != undefined }}"
+															on-dragstart="{{ _cutBrickDragStart }}" on-dragend="{{_cutBrickDragEnd}}"
 															on-click="{{_tetButtonClick}}">{{cut.disp_name}}</file-brick> </template>
 					<template if={{tet.tet_file}}><file-brick 
 													selected="{{active_tet_num == tet_num}}"
@@ -334,7 +335,6 @@ var FilesDropped = function(e){
 			
 	}// go on to next file...
 	
-	
 	this.fire('statustextchanged',{text: "Sorting and organising cut files..."});
 	
 	if(this._pendingCutFiles.length == 0)
@@ -354,6 +354,19 @@ Polymer('file-organiser',{
 	_tetButtonClick: function(e, detail, sender) {this.active_tet_num = e.target.templateInstance.model.tet_num;},
 	_fileGroupClick: function(e, detail, sender) {this.active_exp = e.target.templateInstance.model.exp;},
 	_cutBrickClick: function(e,detail,sender){this.active_tet_num = e.target.templateInstance.model.tet_num; this.active_cut = e.target.templateInstance.model.cut;},
+	_cutBrickDragStart: function(e,detail,sender){
+		document.getElementById(this.usefiledrop).dropenabled = false;
+		var m = e.target.templateInstance.model;
+		var cut = m.cut.inst;
+		var b = new Blob(["this should be an actual string using cut.GetFileStr()"], {type: 'text/plain'}); 
+		var blobURL = window.URL.createObjectURL(b);
+		var filename = m.exp.name + "_" + m.tet_num +".cut";
+		e.dataTransfer.setData("DownloadURL",'application/octet-stream:' + filename +':' + blobURL);
+		return true;
+	},
+	_cutBrickDragEnd: function(e,detail,sender){
+		document.getElementById(this.usefiledrop).dropenabled = true;
+	},
 	active_tet_numChanged: function(from,to){
 		UpdateURLHistory((this.active_exp || {}).name,to);
 		console.log("need to switch to tet-" + to);
