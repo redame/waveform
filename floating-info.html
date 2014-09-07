@@ -20,7 +20,7 @@ USEAGE:
 
 <polymer-element name='floating-info-title' noscript><content></content></polymer-element>
 
-<polymer-element name="floating-info"> 
+<polymer-element name="floating-info" attributes='closemode'> 
 <template>
     <style>
 	:host{
@@ -33,6 +33,21 @@ USEAGE:
 	z-index:100;
 	cursor: move;
 	box-shadow: 3px 3px 7px #999;
+	}
+	.cover{
+	position: absolute;
+	left:0px; 
+	top:0px;
+	display: none;
+	width: 100%;
+	height: 100%;
+	border: 3px solid #F00;
+	box-sizing:border-box;-moz-box-sizing:border-box;
+	background: rgba(255,200,200,0.5);
+	cursor:pointer !important;
+	}
+	:host(:hover) .cover{
+	display: block;
 	}
 	.f-title{
 	background:#333;
@@ -50,7 +65,7 @@ USEAGE:
 	
 	<div class='f-title'><content select='floating-info-title'></content></div>
 	<div class='f-body'><content></content></div>
-	
+	<div class='cover' style="{{ closemode ? '' : 'display:none'}}" on-click="{{_coverClick}}"></div>
 </template>
 <script>
 
@@ -77,6 +92,9 @@ USEAGE:
 	}
 	
 	var Floating_MouseDown = function(event){
+		if(this.closeMode)
+			return; //let the cover deal with the mouse in closemode
+			
 		// if the mouse-down element or any of its ancestors has the "nodrag" attribute then dont start the dragging.
 		for(var i=0;event.path[i] != this;i++) if(event.path[i].hasAttribute && event.path[i].hasAttribute('nodrag'))
 				return;
@@ -84,7 +102,7 @@ USEAGE:
 		this.style.zIndex = ++topZIndex; //bring this floating info to the front (of other floating info within the same parent)
 		this._handLeft = this.offsetLeft -event.clientX; //strictly speaking I think this isn't going to work if there is any scrolling involved
 		this._handTop = this.offsetTop -event.clientY;
-		console.log(this._handLeft + "," + this._handTop);
+		
 		this.style.top = '0px';
 		this.style.left = '0px';
 		document.body.style.cursor = 'move';
@@ -104,8 +122,10 @@ USEAGE:
 		_handTop: 0,
 		ready: function(){
 			this.addEventListener('mousedown',Floating_MouseDown.bind(this));
+		},
+		_coverClick: function(){
+			this.style.display = ''; //TODO: this doesn't do anything at the moment because display:block is not set explicity, rather a "showing" class is added..see main.css
 		}
-
 	});
 </script>
 </polymer-element>

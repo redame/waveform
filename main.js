@@ -674,14 +674,16 @@ T.ToggleHeaderInfo = function(){
 
 
 
-T.FloatingInfo_DocumentMouseUp = function(e){
+/*T.FloatingInfo_DocumentMouseUp = function(e){
 	if(T.Tool.cState == T.Tool.STATES.GRABBER){
 		if($this.hasClass('grabbed_info'))
 			$this.remove();
 		else
 			$this.toggleClass('showing');
 	}
-}
+}*/
+
+
 T.Toggle = function(info_name){
 	var $el = $('.floating_layer').find("." + info_name); 
 	return function(){$el.toggleClass('showing');};
