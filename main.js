@@ -672,36 +672,9 @@ T.ToggleHeaderInfo = function(){
 }
 
 
-T.FloatingInfo_MouseDown = function(event){
-	// if the mouse-down element or any of its ancestors has the "nodrag" class then dont start the dragging.
-	if(event.target != event.currentTarget && 
-			$(event.target).hasClass('nodrag') ||
-			$(event.target).parentsUntil(event.currentTarget).anyHasClass('nodrag'))
-			return;
 
-    var $this = $(this);
-    var offset = $this.position();
-	event.preventDefault();
-	
-    $this.css({zIndex: ++T.floatingTopZ})
-    T.FloatInfoMoving = {$: $(this),
-                    off_left: offset.left-event.clientX,
-    				off_top: offset.top-event.clientY        
-                    }
-    $(document).mousemove(T.FloatingInfo_DocumentMouseMove)
-               .mouseup(T.FloatingInfo_DocumentMouseUp);	
-	$('html').attr("dragging",true);
-}
-T.FloatingInfo_DocumentMouseMove = function(e){
-    T.FloatInfoMoving.$.translate(event.clientX + T.FloatInfoMoving.off_left, 
-                                  event.clientY + T.FloatInfoMoving.off_top)
-        
-}
+
 T.FloatingInfo_DocumentMouseUp = function(e){
-	var $this = T.FloatInfoMoving.$;
-    T.FloatInfoMoving = null;
-    $(document).off('mousemove mouseup');
-	$('html').removeAttr("dragging");
 	if(T.Tool.cState == T.Tool.STATES.GRABBER){
 		if($this.hasClass('grabbed_info'))
 			$this.remove();
@@ -834,7 +807,6 @@ T.$speedhist = $('#speedhist');
 //T.ORG.AddCutActionCallback(T.CutActionCallback);	
 //T.ORG.AddCutChangeCallback(T.SetGroupDataTiles);
 
-$('.floating_layer').on("mousedown",".floatinginfo",T.FloatingInfo_MouseDown)
 $('input').on("mousedown",function(e){e.stopPropagation()}); //this is neccessary to allow the user to click inputs within a dragable floatinginfo
 
 $(document).bind("contextmenu",function(e){return false;})

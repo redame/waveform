@@ -1,0 +1,111 @@
+<!--
+CUSTOM ELEMENT: floating-info
+BY: DM
+
+
+TODO:  don't let the info go offscreen - knock it back in if need be.
+
+USEAGE:
+	<floating-info>
+		<floating-info-title>
+			This is my title.
+		</floating-info-title>
+		everything else is in my body.
+		<div nodrag>
+			mouse down here will not cause the element to start dragging, but mousedown anywhere else will...that's because of the nodrag attribute used.
+		</div>
+	</floating-info>
+-->
+<link rel="import" href="polymer/polymer.html">
+
+<polymer-element name='floating-info-title' noscript><content></content></polymer-element>
+
+<polymer-element name="floating-info"> 
+<template>
+    <style>
+	:host{
+	position: fixed;
+	min-width: 200px;
+	max-width: 400px;
+	background-color: rgba(255,255,255,0.8);
+	will-change: transform;
+	display:none;
+	z-index:100;
+	cursor: move;
+	box-shadow: 3px 3px 7px #999;
+	}
+	.f-title{
+	background:#333;
+	color: #fff;
+	font-weight:bold;
+	display: block;
+	padding:5px;
+	}
+	.f-body{
+	border: 1px solid #000;
+	min-height: 60px;
+	padding: 8px;
+	}
+	</style>
+	
+	<div class='f-title'><content select='floating-info-title'></content></div>
+	<div class='f-body'><content></content></div>
+	
+</template>
+<script>
+
+	var topZIndex = 100; //global
+	
+	var Translate = function(el,x,y){	
+		var str = x==null ? "" : "translate(" + x + "px," + y + "px)";
+		el.style.webkitTransform = str; //TODO: cross-bowser support
+	}
+	
+	var Document_MouseMove = function(e){
+		e.stopPropagation();
+		Translate(this,e.clientX + this._handLeft, e.clientY + this._handTop);
+	}
+	
+	var Document_MouseUp = function(e){
+		document.body.style.cursor = '';
+		document.removeEventListener('mousemove',this._Document_MouseMove,true);
+		document.removeEventListener('mouseup',this._Document_MouseUp,true);
+		this.style.left = e.clientX + this._handLeft + 'px';
+		this.style.top = e.clientY + this._handTop + 'px';
+		Translate(this,null);
+		
+	}
+	
+	var Floating_MouseDown = function(event){
+		// if the mouse-down element or any of its ancestors has the "nodrag" attribute then dont start the dragging.
+		for(var i=0;event.path[i] != this;i++) if(event.path[i].hasAttribute && event.path[i].hasAttribute('nodrag'))
+				return;
+				
+		this.style.zIndex = ++topZIndex; //bring this floating info to the front (of other floating info within the same parent)
+		this._handLeft = this.offsetLeft -event.clientX; //strictly speaking I think this isn't going to work if there is any scrolling involved
+		this._handTop = this.offsetTop -event.clientY;
+		console.log(this._handLeft + "," + this._handTop);
+		this.style.top = '0px';
+		this.style.left = '0px';
+		document.body.style.cursor = 'move';
+		
+		//this seems a bit clumsy...but how else can we do it if we want to keep a reference to the bound version so we can remove it later?
+		this._Document_MouseMove = Document_MouseMove.bind(this); 
+		this._Document_MouseUp = Document_MouseUp.bind(this);
+		document.addEventListener('mousemove',this._Document_MouseMove,true);
+		document.addEventListener('mouseup',this._Document_MouseUp,true);
+		//TODO: check that we can swallow all the pointer events at the document level while dragging..don't want anything else to get any pointer events.
+		
+		return this._Document_MouseMove(event);
+	}
+		
+	Polymer('floating-info',{
+		_handLeft: 0,
+		_handTop: 0,
+		ready: function(){
+			this.addEventListener('mousedown',Floating_MouseDown.bind(this));
+		}
+
+	});
+</script>
+</polymer-element>
