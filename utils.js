@@ -82,3 +82,7 @@ RegExp.fromList = function(a){
 
 
 Math.hypot = Math.hypot || function(a,b){return Math.sqrt(a*a+b*b);};
+
+forEachInNodeList = function(nodelist,foo){
+	Array.prototype.forEach.call(Array.prototype.slice.call(nodelist), foo); //no wonder I've been using jQuery...why on earth does this have to be so lengthy?
+}

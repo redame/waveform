@@ -7,7 +7,9 @@ It exposes an few important events which are fired whenever the user navigates b
 filesChanged
 cutModified
 
-statusMessageUpdate - this isn't fired very often. When file are availble it fires "No data selected. Choose a trial from the available files." later it may fire "Sorting and organising cut files..." and then null.
+statustextchanged - this isn't fired very often. When file are availble it fires "No data selected. Choose a trial from the available files." later it may fire "Sorting and organising cut files..." and then null.
+
+Note this is intended to be used as a singleton..not sure what happens if there are multiple on the page
 -->
 <link rel="import" href="polymer/polymer.html">
 <link rel="import" href="scrollable-area.html">
@@ -73,7 +75,7 @@ statusMessageUpdate - this isn't fired very often. When file are availble it fir
 	border-color: #500;
 	color: #500;
 	}
-	.brick-cut[isproperfile=true]{
+	.brick-cut[isproperfile=false]{
 	background: #bbF;
 	border-color: #005;
 	color: #005;
@@ -83,7 +85,9 @@ statusMessageUpdate - this isn't fired very often. When file are availble it fir
 	<scrollable-area-top class="tet-navigation">
 		<div class="tet-title">tetrode:</div>
 		<template repeat="{{tet_num in available_tet_nums}}">
+			<template if="{{tet_num}}">
 			<div class="button button-tet" selected="{{active_tet_num == tet_num}}" on-click="{{_tetButtonClick}}">{{tet_num}}</div>
+			</template>
 		</template>
 	</scrollable-area-top>
 	<template repeat="{{exp in exps}}">
@@ -95,7 +99,7 @@ statusMessageUpdate - this isn't fired very often. When file are availble it fir
 			</div>
 			<div class="group_bottom">
 				<template repeat="{{tet,tet_num in exp.tets}}">
-					<template repeat="{{cut in tet.cuts}}"><div class="brick brick-cut" selected="{{active_tet_num == tet_num}}" isproperfile="{{cut.file_name != undefined}}">{{cut.disp_name}}<div> </template>
+					<template repeat="{{cut in tet.cuts}}"><div class="brick brick-cut" selected="{{active_tet_num == tet_num}}" isproperfile="{{cut.file != undefined}}">{{cut.disp_name}}<div> </template>
 					<template if={{tet.tet_file}}><div class="brick brick-tet" selected="{{active_tet_num == tet_num}}">~.{{tet_num}}</div></template>
 				</template>
 			</div>
@@ -104,37 +108,214 @@ statusMessageUpdate - this isn't fired very often. When file are availble it fir
 	</scrollable-area>
 </template>
 
+<script src="worker-bridge.js"></script>
+<script src="parsefiles.js"></script>
+<script src="cut.js"></script>
+
 <script>
-var FilesDropped = function(e){
-	var fileList = e.detail;
-	console.dir(fileList);
+//Escape a user specified string for use in regex search.
+// Taken from http://stackoverflow.com/a/3561711
+RegExp.escape= function(s) {
+    return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+};
+
+//Takes an Array of strings and returns a regex which can be used for finding items in the set given in the list
+//with the longest possible match returned. e.g.
+// RegExp.fromList(["hello","world","hello world"]).exec("this hello world life") will match on "hello world".
+RegExp.fromList = function(a){
+	return a.length ? RegExp(a.sort(function(a,b){return b.length-a.length;}).map(RegExp.escape).join("|")) : null;
 }
+
+function GetUrlParameters(){
+	var paramArray =  window.location.search.substr(1).split("&");
+	var paramOb = {};
+	while(paramArray.length){
+		var parts = paramArray.pop().split("=");
+		paramOb[decodeURIComponent(parts[0])] = parts[1] ? decodeURIComponent(parts[1]) : "";
+   }
+   return paramOb;  
+}
+	
+function UpdateURLHistory(exp_name,tet_num){
+	if(!exp_name || !tet_num)
+		return; //don't update if the thing to update is nonsense
+		
+	try{
+		history.replaceState({},exp_name + ' [Cutting GUI]',"?exp=" + encodeURIComponent(exp_name) + "&tet=" + encodeURIComponent(tet_num));
+	}catch(e){};
+}
+	
+var REGEX_FILE_EXT = /\.([0-9a-z]+)$/i;
+
+var AssignCuts = function(){		
+		//Note that once we've assigned all the cuts we will check for siblings and sort them into chronologicla order
+		
+		//build a regex to match on experiment names, matching on the longest possible name
+		var allExpsRegex = RegExp.fromList(Object.keys(this.expFromName));
+		
+		//we take a copy of the pendingCur list here as the list is going to be modified within GotCutDetails during the loop below.
+		var cutFiles = this._pendingCutFiles.slice(0); 
+		var match;
+		for(var i=0;i<cutFiles.length;i++){ //Loop through all the cut files...
+		
+			if(allExpsRegex && (match = allExpsRegex.exec(cutFiles[i].base))){  //try and assign to an experiment based on filename...		
+				//Note that there may not be any experiment names to match against...
+				//though I guess we could update the regex as we iterate through this loop...but whatever.
+				GotCutDetails.call(this,cutFiles[i],match[0]); 
+				continue;
+			}
+			
+			if(cutFiles[i].isClu) //if we have a clu file, but we cant match against any names then we're stuck so just use filename base..
+				GotCutDetails.call(this,cutFiles[i],cutFiles[i].base);  //TODO: if at a later date we add files that allow us to match on the base then it would be nice to come back and reassign these files
+			else  //otherwise we can read the header to find out the experiment name (done asynchrously)...
+				PAR.LoadCut2(cutFiles[i].file,cutFiles[i].tet,cutFiles[i],GotCutDetails.bind(this)); 
+				
+		}
+		
+}
+
+var GotCutDetails = function(thePendingCut,base){
+	var exp = GetExpOb.call(this,base);
+	var tet_ob = GetTetOb.call(this,exp,thePendingCut.tet);
+	tet_ob.cuts.push({	file:thePendingCut.file,
+						disp_name: thePendingCut.file.name.replace(base,"~"),
+						info:{isClu: thePendingCut.isClu}
+					});
+					
+	//this pendingCut is no longer pending
+	this._pendingCutFiles.splice(this._pendingCutFiles.indexOf(thePendingCut),1);
+	
+	if(this._pendingCutFiles.length == 0)
+		ReadAllFiles.call(this);
+		
+}
+
+var ReadAllFiles = function(){
+	this.fire('statustextchanged',"No data selected. Choose a trial from the available files.");
+	
+	//TODO: check if active_exp has been added to and reload if needed...or could just reload whatever
+	
+	
+	if(!this.active_exp){
+		//when the page loads its possible there will be state informaiton in the url from last time (e.g. if the user reloads the page)
+        //if so, then once the user has loaded some files into the page, and before they have selected an exp, let see if the old exp is available
+        //if so lets select it for the user.
+        var params = GetUrlParameters();
+        if(params.exp && params.exp in this.expFromName)
+			this.active_exp = this.expFromName[params.exp];
+		if(params.tet && !isNaN(parseInt(params.tet)))
+			this.active_tet_num = parseInt(params.tet);
+	}
+	
+}
+
+var GetTetOb = function(exp,tet){
+	// Gets the tet object from within exp, creating a new one if need be.
+	var tet_ob = exp.tets[tet];
+	if(!tet_ob){
+		tet_ob = exp.tets[tet] = {tet_file:null, cuts:[]};
+		this.available_tet_nums[tet] = tet;
+	}
+	return tet_ob;
+}
+
+var GetExpOb = function(exp_name){
+	// Gets the exp object from within the file-organiser, creating a new one if need be.
+	var exp_ob = this.expFromName[exp_name];
+	if(!exp_ob){
+		exp_ob = {name:exp_name,
+			set_file:null,
+			pos_file:null,
+			eeg_files:[],
+			tets:[]};
+		this.exps.push(exp_ob);
+		this.expFromName[exp_name] = exp_ob;
+	}
+	return exp_ob;
+}
+
+var FilesDropped = function(e){
+	var files = e.detail;
+	
+	for(var i =0; i <files.length;i++){ //for each file in the list...
+		var type = null, base = "",ext;
+		
+		// decide what "type" of file it is based on the one or more extensions it has
+		// we only want certain types of files...
+		if (ext = REGEX_FILE_EXT.exec(files[i].name)){
+			ext = ext[1].toLowerCase();
+			base = files[i].name.slice(0,files[i].name.length-ext.length-1);
+
+			if(ext=="cut") 					type = 1;
+			else if(ext == "pos") 			type = 2;
+			else if(ext == "set") 			type = 3;
+			else if(ext == "eeg")			type = 9;
+			else if(!isNaN(parseInt(ext)))
+				if(base.slice(-4) == ".clu")
+					if(base.slice(-9) == ".temp.clu") type = null; 
+					else							  type = 5; //clu file
+				else if(base.slice(-4) == ".fet") type = null; 
+				else if(base.slice(-4) == ".klg") type = null; 
+				else 							  type = 4; //tet file
+		}
+
+		
+		// Assign the file to the relevant place within the the exps structure.
+		// Or, in the case of cut/clu files, put it into a list of pending files
+		// which we need to do a bit more work on before assigning.
+		if(!type){
+			//unknown or unwanted file type
+		}else if(type == 1){
+			this._pendingCutFiles.push({file:files[i],base:base,tet:parseInt(base.match(/\d*$/)[0]),isClu:false});
+		}else if(type == 5){
+			this._pendingCutFiles.push({file:files[i],base:base,tet:parseInt(ext),isClu:true});
+		}else{	
+			var exp = GetExpOb.call(this,base);
+			if(type == 3){
+				exp.set_file = files[i];
+			}else if(type == 2){
+				exp.pos_file = files[i];
+			}else if(type == 9){
+				exp.eeg_files.push(files[i]);
+			}else if(type == 4){
+				GetTetOb.call(this,exp,parseInt(ext)).tet_file = files[i];
+			}		
+		}
+			
+	}// go on to next file...
+	
+	
+	this.fire('statustextchanged',{text: "Sorting and organising cut files..."});
+	
+	if(this._pendingCutFiles.length == 0)
+		ReadAllFiles.call(this);
+	else
+		this.async(AssignCuts.bind(this)); //this is a bit more complicated so we leave it for a moment
+}
+
 
 Polymer('file-organiser',{
 	active_tet_num: 0,
 	active_exp: null,
-	available_tet_nums: [1,2,3,4,5,6,7,12,14],
-	exps: [
-		{name: '2112 2014-02-03 1', 
-		 tets: [undefined,{tet_file:"hello",cuts:[{disp_name:"~x.cut"},{file_name:'thing',disp_name:"~a.cut"}]},{tet_file:"hello",cuts:[{disp_name:"~d.cut"}]},undefined,{},{tet_file:"hello"}]
-			},
-		{name: '2112 2014-02-03 2',
-		 set_file: "hello",
-		 pos_file: "hlo",
-		 tets: [undefined,{tet_file:"hello"},{tet_file:"hello"},undefined,{tet_file:"hello"}]
-			},
-		{name: '2112 2014-02-03 4',
-		 pos_file: "hello"}],
+	_pendingCutFiles: [], //holds the cut files that are yet to be assign to a trial
+	exps: [],
+	expFromName: {}, //the same entries as exps, but here it is key-value with key=exp name, rather than an array 
 	_tetButtonClick: function(e, detail, sender) {this.active_tet_num = e.target.templateInstance.model.tet_num;},
 	_fileGroupClick: function(e, detail, sender) {this.active_exp = e.target.templateInstance.model.exp;},
 	active_tet_numChanged: function(from,to){
-	
+		UpdateURLHistory((this.active_exp || {}).name,to);
 		console.log("need to switch to tet-" + to);
 	},
 	active_expChanged: function(from,to){
+		document.title = to.name + ' [Cutting GUI]';
+		UpdateURLHistory(to.name,this.active_tet_num);
 		console.log("need to switch to exp " + to.name);
 	},
 	ready: function(){
+		this.available_tet_nums = [];
+		this._pendingCutFiles = [];
+		this.exps = [];
+		this.expFromName = {};
 		document.getElementById(this.usefiledrop).addEventListener('filesdropped',FilesDropped.bind(this));
 	}
 })

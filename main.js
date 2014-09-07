@@ -557,7 +557,7 @@ T.StoreData = function(){
 	localStorage.mapIsOn = JSON.stringify(T.mapIsOn);
 	localStorage.tAutocorrIsOn = JSON.stringify(T.tAutocorrIsOn);
 
-	localStorage.tet = T.ORG.GetTet();
+	//localStorage.tet = T.ORG.GetTet();
 	localStorage.xFactor = T.xFactor;
 	localStorage.yFactor = T.yFactor;
     
@@ -573,13 +573,13 @@ T.StoreData = function(){
     localStorage.splitterPercents = JSON.stringify($.map($('core-splitter').get(),function(el){return el.getSize('%');}));
 	localStorage.showToolbar = T.$main_toolbar.is(":visible");
 	
-	localStorage.posSmoothing = T.ORG.GetPosSmoothing();
-	localStorage.posMaxSpeed = T.ORG.GetPosMaxSpeed();
+	//localStorage.posSmoothing = T.ORG.GetPosSmoothing();
+	//localStorage.posMaxSpeed = T.ORG.GetPosMaxSpeed();
 }
 
 T.ApplyStoredSettingsA = function(){
 	if(localStorage.state){
-		T.ORG.SwitchToTet(localStorage.tet || 1);
+		//T.ORG.SwitchToTet(localStorage.tet || 1);
 		T.xFactor = localStorage.xFactor || 2;
 		T.yFactor = localStorage.yFactor;
 		T.$header_search.val(localStorage.headerFilter || '');
@@ -600,6 +600,7 @@ T.ApplyStoredSettingsA = function(){
 
 T.ApplyStoredSettingsB = function(e) {
 	//this is run when the web components are loaded and ready for action
+
 	$.map(
 		zip([
 			$('core-splitter').get(),
@@ -611,10 +612,9 @@ T.ApplyStoredSettingsB = function(e) {
 	T.RM.SetCmPerBin(parseFloat(localStorage.BIN_SIZE_CM || "2.5"));
     T.RM.SetSmoothingW(parseInt(localStorage.rmSmoothingW || "2"));
 	T.TC.SetDeltaT(parseInt(localStorage.tcDeltaT || "500"));
-	T.ORG.SetPosSmoothing(parseFloat(localStorage.posSmoothing || "0.2"));
-	T.ORG.SetPosMaxSpeed(parseFloat(localStorage.posMaxSpeed || "5"));
+	//T.ORG.SetPosSmoothing(parseFloat(localStorage.posSmoothing || "0.2"));
+	//T.ORG.SetPosMaxSpeed(parseFloat(localStorage.posMaxSpeed || "5"));
 }
-
 
 
 T.DocumentReady = function(){
@@ -830,9 +830,9 @@ T.$file_info_pane = $('.file_info');
 T.$info_summary = $('.info_summary');
 T.$info_summary_text = $('.info_summary_text');
 T.$speedhist = $('#speedhist');
-T.ORG.AddFileStatusCallback(T.FinishedLoadingFile);
-T.ORG.AddCutActionCallback(T.CutActionCallback);	
-T.ORG.AddCutChangeCallback(T.SetGroupDataTiles);
+//T.ORG.AddFileStatusCallback(T.FinishedLoadingFile);
+//T.ORG.AddCutActionCallback(T.CutActionCallback);	
+//T.ORG.AddCutChangeCallback(T.SetGroupDataTiles);
 
 $('.floating_layer').on("mousedown",".floatinginfo",T.FloatingInfo_MouseDown)
 $('input').on("mousedown",function(e){e.stopPropagation()}); //this is neccessary to allow the user to click inputs within a dragable floatinginfo

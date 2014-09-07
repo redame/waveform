@@ -852,8 +852,8 @@ T.WV = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,PALETTE_FLAG){
 
 	Init(); //initialises all the webgl stuff without actually doing any data-specific stuff
 
-	ORG.AddCutChangeCallback(SlotsInvalidated);
-	ORG.AddFileStatusCallback(FileStatusChange);
+	//ORG.AddCutChangeCallback(SlotsInvalidated);
+	//ORG.AddFileStatusCallback(FileStatusChange);
 	
 	return {canDoComplexRender : function(){return canDoComplexRender;},
 			SetPaletteMode: SetPaletteMode,

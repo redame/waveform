@@ -257,7 +257,7 @@ T.EEG = function($eegCanv,ORG){
 	var theWorker = BuildBridgedWorker(WorkerCode,["GetPowerspect*"],["GotSpectSection*"],[GotSpectSection]);	
 	console.log("EEG BridgeWorker is:\n  " + theWorker.blobURL);
 	
-	ORG.AddFileStatusCallback(ReadEEGForPlotting);
+	//ORG.AddFileStatusCallback(ReadEEGForPlotting);
 	return { /* nothing in the end	*/}
 }($('#eegspect'),T.ORG)
 

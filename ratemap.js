@@ -745,8 +745,8 @@ T.RM = function(BYTES_PER_SPIKE,BYTES_PER_POS_SAMPLE,POS_NAN,
 	$smoothingSlider.on("change",function(e){SetSmoothingW(this.value,true);});
 	SetBinSizeDeg(6);
     
-	ORG.AddCutChangeCallback(SlotsInvalidated);
-	ORG.AddFileStatusCallback(FileStatusChanged);
+	//ORG.AddCutChangeCallback(SlotsInvalidated);
+	//ORG.AddFileStatusCallback(FileStatusChanged);
 	modeChangeCallbacks.push(SetRenderMode);
 	
 	
@@ -762,7 +762,7 @@ T.RM = function(BYTES_PER_SPIKE,BYTES_PER_POS_SAMPLE,POS_NAN,
 		SetRenderMode: SetRenderMode
 	}
 
-}(T.PAR.BYTES_PER_SPIKE,T.PAR.BYTES_PER_POS_SAMPLE,T.PAR.POS_NAN,
+}(/*T.PAR.BYTES_PER_SPIKE,T.PAR.BYTES_PER_POS_SAMPLE,T.PAR.POS_NAN,*/216,215,1023,//TODO:these numbers aren't right and should be linked to file-organiser
   T.CutSlotCanvasUpdate,T.CANVAS_NUM_RM,T.CANVAS_NUM_RM_DIR,T.ORG,
   T.POS_PLOT_WIDTH,T.POS_PLOT_HEIGHT,T.SpikeForPathCallback,
   new Uint32Array(T.PALETTE_FLAG.buffer),new Uint32Array(T.PALETTE_TIME.buffer),

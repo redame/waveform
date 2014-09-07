@@ -1,12 +1,10 @@
 "use strict";
 
-// T.PAR: consists of several functions that take a file handle and a callback.
+// PAR: consists of several functions that take a file handle and a callback.
 // The functions add the callback to a queue and send the file handle off to a worker to be parsed into a header object [and data buffer, if applicable]. 
 // The worker returns the parsed data to the main thread, which then forwards it on to the callback at the front of the queue.
 // there is a separate worker (each with its own specific code) for set, tet, pos, and cut.
-var T = T || {};
-
-T.PAR = function(){
+var PAR = (function(){
 
 	// ==== WORKER CODE ===============================================================================
 	var tetWorkerCode = function(){
@@ -500,12 +498,13 @@ T.PAR = function(){
 		callbacks.cut.shift()({cut:cut, header:header});
 	}
 	
-	var GetCutExpNameWithWorker = function(file,tet,callback){
-		callbacks.cut.push(callback);
+	var GetCutExpNameWithWorker = function(file,tet,state,callback){
+		callbacks.cut.push({callback: callback,state:state});
 		cutWorker.GetCutFileExpName(file,tet,file.name);
 	}
 	var CutFileGotExpName = function(fileName,expName,tet){
-		callbacks.cut.shift()(fileName,expName,"cut",tet);
+		var c = callbacks.cut.shift();
+		c.callback(c.state,expName);
 	}
 
 	var LoadEEGWithWorker = function(file,callback){
@@ -569,4 +568,4 @@ T.PAR = function(){
 		NAN16: -32768//TODO: share this with pos worker properly
     }
     
-}();
+}());

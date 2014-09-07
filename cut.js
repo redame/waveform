@@ -1,10 +1,16 @@
 "use strict";
 
 // The CUT module, the primary component of which is a class called cut
-var T = T || {};
-T.ORG = T.ORG || {};
+var ORG = ORG || {};
 
-T.CUT = function(ORG){//class factory
+var $_Callbacks = function(){
+	return {
+	fireWith: function(){throw "need to reimplement events in cut"},
+	add: function(){throw "need to reimplement events in cut"},
+	remove: function(){throw "need to reimplement events in cut"}
+	};
+}
+var CUT = (function(ORG){//class factory
 
 	//the object this._ is to be considered private, though it is actually public.  
 	//Correct me if I'm wrong, but I think this is considered an ok way of emulating OOP in javascript - DM
@@ -23,13 +29,13 @@ T.CUT = function(ORG){//class factory
 	//different purposes and sometimes only the actionCallbacks get triggerd...
 	//the changeCallbacks should not worry about the exact action performed, only what the resulting change was, whereas the actioncallbacks
 	//dont actually care what the change is they just need to know what action occured.
-	var changeCallbacks = $.Callbacks(); //callbacks must be of the form foo(invalidatedImmutableSlots,isNewCut){ }, 
+	var changeCallbacks = $_Callbacks(); //callbacks must be of the form foo(invalidatedImmutableSlots,isNewCut){ }, 
 							  //where this is the current cut object and invalidatedImmutableSlots is a logical vector with a true for each immutable slot that has just
 							  //been invalidated.  The callback should logically OR the invalidation vector with its current invalidation vector (if it has one) and process each of the invalid slots.
 							  //When a cut is constructed the isNewCut parameter is true and the invalidatedImmutablesSlots will all be true.  This means the callbacks
 							  //are expected to already have any other needed data by that point (so you need to provide it separately before the new cut)
 
-	var actionCallbacks = $.Callbacks(); //callbacks must be of the form foo(info){} where this is the current cut object, info is an object with at least a string proeprty named description
+	var actionCallbacks = $_Callbacks(); //callbacks must be of the form foo(info){} where this is the current cut object, info is an object with at least a string proeprty named description
 
 	//the undo stack is an array of these objects
 	var action = function(type,data,description){ 
@@ -623,5 +629,5 @@ var TransplantFromAsToB = function(a_arr,splitMask_arr,b){
 	
 	return cut;	// export the cut class
 	
-}(T.ORG);
+}(ORG));
 

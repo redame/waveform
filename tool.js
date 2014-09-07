@@ -209,8 +209,8 @@ T.Tool.TileMouseUp_MergerTarget = function(event){
 		ind_a = tmp;
 	}
 
-	T.ORG.GetCut().AddBtoA(ind_a,ind_b);	
 	T.Tool.EndMerger();
+	T.ORG.GetCut().AddBtoA(ind_a,ind_b);	
 	event.stopPropagation();
 
 }
@@ -472,7 +472,6 @@ $(document).on("keypress",T.Tool.GrabIt_DocumentKeyPress)
 
 /* ================== CLUSTER PAINTER ========= */
 
-//TODO: use crosshair element (with width bars removed) rather than explicitly dealing with svg here
 
 T.Tool.UpdateCursor_Painter = function(x,y,r){
 	var xh = T.Tool.PainterState.crosshair;
@@ -559,7 +558,7 @@ T.Tool.SetPainterDestGroup = function(g){
 											color: T.PALETTE_FLAG_CSS_TEXT[g]})
 				   .attr('data-group',g); //use proper data attr to match stickers in src and other categories.
 	T.Tool.PainterState.destGroup = g;
-	var c = T.ORG.GetCut();
+	var c = null;// T.ORG.GetCut(); //TODO: this needs to link to file-organiser
 	if(c){
 		c.GetExtraStuff().painterDest = g;
 		T.Tool.ClusterOthersUpdate(c);
@@ -574,7 +573,7 @@ T.Tool.SetPainterSrcGroups = function(gs){
 					+ "'>" + gs[i] + "</div>");
 	T.$painter_src.html(str.join(""));
 	T.Tool.PainterState.srcGroups = gs;
-	var c = T.ORG.GetCut();
+	var c = null;//T.ORG.GetCut(); TODO: this needs to link to file-organiser
 	if(c){
 		c.GetExtraStuff().painterSrc = gs;
 		T.Tool.ClusterOthersUpdate(c);
@@ -605,7 +604,7 @@ T.Tool.PainterState = T.Tool.STATES.PAINTER;
 T.Tool.PainterState.r = 20; //TODO: lose this, and just use crosshair's r value
 T.Tool.PainterState.crosshair = document.getElementById('cluster_crosshair');
 T.Tool.PainterState.crosshair.r = 20;
-T.ORG.AddCutChangeCallback(T.Tool.ClusterPlotChangeCallback);
+//T.ORG.AddCutChangeCallback(T.Tool.ClusterPlotChangeCallback);
 T.Tool.SetPainterDestGroup(1);
 T.Tool.SetPainterSrcGroups([0]);
 

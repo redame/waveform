@@ -281,8 +281,8 @@ T.TC = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,$deltaTSlider,$deltaT
 	}
 	$deltaTSlider.on("change",DeltaTSilder_Change );
 	
-	ORG.AddCutChangeCallback(SlotsInvalidated);
-	ORG.AddFileStatusCallback(FileStatusChanged);
+	//ORG.AddCutChangeCallback(SlotsInvalidated);
+	//ORG.AddFileStatusCallback(FileStatusChanged);
 	
 	var theWorker = BuildBridgedWorker(workerFunction,["CreateAllSpikeTimes*","SetImmutable*","NewCut","SetMaxDeltaT"],["PlotHist*"],[PlotHist]);
 	console.log("tmporalcorr BridgeWorker is:\n  " + theWorker.blobURL);

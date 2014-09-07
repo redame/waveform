@@ -330,8 +330,8 @@ T.CP = function($canvasParent,ORG,PALETTE_B,PALETTE_FLAG,modeChangeCallbacks){
             T.Tool.SetPainterDestGroup(g);
     }
 
-	ORG.AddCutChangeCallback(SlotsInvalidated);
-	ORG.AddFileStatusCallback(FileStatusChanged);
+	//ORG.AddCutChangeCallback(SlotsInvalidated);
+	//ORG.AddFileStatusCallback(FileStatusChanged);
 	modeChangeCallbacks.push(SetRenderMode);
 	
 	T.$cluster_panel.on({"mousemove": ClusterPlot_MouseMove,
