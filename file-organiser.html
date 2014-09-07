@@ -127,7 +127,7 @@ Note we also have a file-brick element, but that is intended for private use wit
 	<template repeat="{{exp in exps}}">
 		<div class='button file-group' selected="{{active_exp == exp}}" on-click="{{_fileGroupClick}}">
 			<div class="group_top">
-				<b>trial '{{exp.name}}'</b>
+				<b>trial '{{exp.name}}'</b>&nbsp;&nbsp;
 				<template if={{exp.set_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.set</file-brick></template>
 				<template if={{exp.pos_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.pos</file-brick></template>
 			</div>
@@ -221,21 +221,29 @@ var GotCutDetails = function(thePendingCut,base){
 						disp_name: thePendingCut.file.name.replace(base,"~"),
 						info:{isClu: thePendingCut.isClu}
 					});
-					
+	
 	//this pendingCut is no longer pending
 	this._pendingCutFiles.splice(this._pendingCutFiles.indexOf(thePendingCut),1);
 	
+	//may need to sort the sibling cuts...(note this is a bit inefficient if there are loads of siblings, but who cares really)
+	//reading the lastModifiedDate is the slow part of this process.
+	if(tet_ob.cuts.length>1){
+		tet_ob.cuts.sort(function(a,b){
+			return (a.date || (a.date = new Date((a.file && a.file.lastModifiedDate) || 0).getTime())  ) -
+				   (b.date || (b.date = new Date((b.file && b.file.lastModifiedDate) || 0).getTime())  );
+		});
+	}
+
 	if(this._pendingCutFiles.length == 0)
 		ReadAllFiles.call(this);
 		
 }
 
-var ReadAllFiles = function(){
-	this.fire('statustextchanged',"No data selected. Choose a trial from the available files.");
 	
+var ReadAllFiles = function(){	
 	//TODO: check if active_exp has been added to and reload if needed...or could just reload whatever
 	
-	
+	this.exps.sort(function(a,b){return a.name == b.name ? 0 : a.name>b.name ? 1 : -1})//lexicographical sort
 	if(!this.active_exp){
 		//when the page loads its possible there will be state informaiton in the url from last time (e.g. if the user reloads the page)
         //if so, then once the user has loaded some files into the page, and before they have selected an exp, let see if the old exp is available
@@ -243,6 +251,8 @@ var ReadAllFiles = function(){
         var params = GetUrlParameters();
         if(params.exp && params.exp in this.expFromName)
 			this.active_exp = this.expFromName[params.exp];
+		else
+			this.fire('statustextchanged',"No data selected. Choose a trial from the available files.");
 		if(params.tet && !isNaN(parseInt(params.tet)))
 			this.active_tet_num = parseInt(params.tet);
 	}
