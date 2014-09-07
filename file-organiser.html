@@ -10,9 +10,74 @@ cutModified
 statustextchanged - this isn't fired very often. When file are availble it fires "No data selected. Choose a trial from the available files." later it may fire "Sorting and organising cut files..." and then null.
 
 Note this is intended to be used as a singleton..not sure what happens if there are multiple on the page
+
+Note we also have a file-brick element, but that is intended for private use within the file-organiser.
+
 -->
 <link rel="import" href="polymer/polymer.html">
 <link rel="import" href="scrollable-area.html">
+
+<polymer-element name="file-brick" attributes='forevermedium colora colorb' noscript>
+<template>
+	<style>
+	:host{
+	display: inline-block;
+	margin: 2px;
+	width: 5px;
+	height: 20px; 
+	cursor: default;
+	position:relative;
+	vertical-align: top;
+	font-size:12px;
+	}
+	:host(:hover){
+	z-index:100;
+	}
+	.text{
+	display: inline;
+	border: 1px #000 solid;
+	background: #ddd;
+	color: #000;
+	position:absolute;
+	padding: 2px;
+	width: 2px;
+	height: 12px;
+	white-space: nowrap;
+	left:-2px;
+	overflow: hidden;
+	text-align: center;
+	}
+	:host([selected="true"]){
+	width:auto;
+	}
+	.text:hover{
+	width:auto;
+	box-shadow: 0px 3px 10px 0px #bbb;
+	left:-4px;
+	border-width: 2px;
+	padding-bottom: 4px;
+	}
+	:host([selected="true"]) .text{
+	width:auto;
+	position:relative;
+	top:2px;
+	border-width: 2px;
+	padding-bottom: 2px;
+	}
+	:host([forevermedium]){
+	margin: 0px;
+	width: auto;
+	}
+	:host([forevermedium]) .text{
+	padding: 0px 2px 0px 2px;
+	width:auto;
+	position:relative;
+	border-width: 2px;
+	}
+	</style>
+	<div class="text" style="border-color:{{colora}};background:{{colorb}};color:{{colora}}"><content></content></div>
+</template>
+</polymer-element>
 
 <polymer-element name="file-organiser" attributes='usefiledrop'>
 <template>
@@ -46,39 +111,8 @@ Note this is intended to be used as a singleton..not sure what happens if there 
 	margin: 3px;
 	font-size: 0;
 	}
-	.brick{
-	display: inline-block;
-	border: 2px #000 solid;
-	padding: 2px;
-	margin: 2px;
-	background: #ddd;
-	cursor: default;
-	}
-	.brick-top{
-	margin: 0px;
-	padding: 0px 2px 0px 2px;
-	background: #ddb550;
-	border-color: #552510;
-	color: #552510;
-	}
-	.brick-tet{
-	color: #000;
-	}
 	.group_bottom{
 	font-size:0px;
-	}
-	.brick[selected=true]{
-	font-size:12px;
-	}
-	.brick-cut{
-	background: #fbb;
-	border-color: #500;
-	color: #500;
-	}
-	.brick-cut[isproperfile=false]{
-	background: #bbF;
-	border-color: #005;
-	color: #005;
 	}
 	</style>
 	<scrollable-area>
@@ -94,13 +128,19 @@ Note this is intended to be used as a singleton..not sure what happens if there 
 		<div class='button file-group' selected="{{active_exp == exp}}" on-click="{{_fileGroupClick}}">
 			<div class="group_top">
 				<b>trial '{{exp.name}}'</b>
-				<template if={{exp.set_file}}><div class="brick brick-top">~.set</div></template>
-				<template if={{exp.pos_file}}><div class="brick brick-top">~.pos</div></template>
+				<template if={{exp.set_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.set</file-brick></template>
+				<template if={{exp.pos_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.pos</file-brick></template>
 			</div>
 			<div class="group_bottom">
 				<template repeat="{{tet,tet_num in exp.tets}}">
-					<template repeat="{{cut in tet.cuts}}"><div class="brick brick-cut" selected="{{active_tet_num == tet_num}}" isproperfile="{{cut.file != undefined}}">{{cut.disp_name}}<div> </template>
-					<template if={{tet.tet_file}}><div class="brick brick-tet" selected="{{active_tet_num == tet_num}}">~.{{tet_num}}</div></template>
+					<template repeat="{{cut in tet.cuts}}"><file-brick colora="{{ cut.file != undefined ? '#500': '#005' }}" 
+																	   colorb="{{ cut.file != undefined ? '#fbb': '#bbf' }}" 
+															selected="{{active_tet_num == tet_num}}" 
+															isproperfile="{{}}"
+															on-click="{{_tetButtonClick}}">{{cut.disp_name}}</file-brick> </template>
+					<template if={{tet.tet_file}}><file-brick 
+													selected="{{active_tet_num == tet_num}}"
+													on-click="{{_cutBrickClick}}">~.{{tet_num}}</file-brick></template>
 				</template>
 			</div>
 			</div>
@@ -297,11 +337,13 @@ var FilesDropped = function(e){
 Polymer('file-organiser',{
 	active_tet_num: 0,
 	active_exp: null,
+	active_cut: null,
 	_pendingCutFiles: [], //holds the cut files that are yet to be assign to a trial
 	exps: [],
 	expFromName: {}, //the same entries as exps, but here it is key-value with key=exp name, rather than an array 
 	_tetButtonClick: function(e, detail, sender) {this.active_tet_num = e.target.templateInstance.model.tet_num;},
 	_fileGroupClick: function(e, detail, sender) {this.active_exp = e.target.templateInstance.model.exp;},
+	_cutBrickClick: function(e,detail,sender){this.active_tet_num = e.target.templateInstance.model.tet_num; this.active_cut = e.target.templateInstance.model.cut;},
 	active_tet_numChanged: function(from,to){
 		UpdateURLHistory((this.active_exp || {}).name,to);
 		console.log("need to switch to tet-" + to);
