@@ -842,7 +842,10 @@ $(document).bind("contextmenu",function(e){return false;})
 $(window).on('polymer-ready',T.ApplyStoredSettingsB);
 window.onbeforeunload = T.StoreData;
 
-
+T.elTileWallText = document.getElementsByClassName('tilewall_text')[0];
+document.getElementsByTagName('file-organiser')[0].addEventListener('statustextchanged',function(e){T.elTileWallText.textContent = e.detail;});
+	
+	
 T.PALETTE_FLAG = function(){
         var data = new Uint8Array(256*4);
         for(var i=0;i<256;i++)

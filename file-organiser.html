@@ -243,6 +243,7 @@ var GotCutDetails = function(thePendingCut,base){
 	
 var ReadAllFiles = function(){	
 	//TODO: check if active_exp has been added to and reload if needed...or could just reload whatever
+	this.fire('statustextchanged',"No data selected. Choose a trial from the available files.");
 	
 	this.exps.sort(function(a,b){return a.name == b.name ? 0 : a.name>b.name ? 1 : -1})//lexicographical sort
 	if(!this.active_exp){
@@ -252,8 +253,6 @@ var ReadAllFiles = function(){
         var params = GetUrlParameters();
         if(params.exp && params.exp in this.expFromName)
 			this.active_exp = this.expFromName[params.exp];
-		else
-			this.fire('statustextchanged',"No data selected. Choose a trial from the available files.");
 		if(params.tet && !isNaN(parseInt(params.tet)))
 			this.active_tet_num = parseInt(params.tet);
 	}
@@ -286,7 +285,14 @@ var GetExpOb = function(exp_name){
 }
 
 var FilesDropped = function(e){
-	var files = e.detail;
+	this.fire("statustextchanged","organising files...");
+	this._pendingfiles = e.detail;
+	this.async(FilesDropped_2)
+}
+
+var FilesDropped_2 = function(files){
+	var files = this._pendingfiles;
+	this._pendingfiles = null;
 	
 	for(var i =0; i <files.length;i++){ //for each file in the list...
 		var type = null, base = "",ext;
@@ -335,7 +341,7 @@ var FilesDropped = function(e){
 			
 	}// go on to next file...
 	
-	this.fire('statustextchanged',{text: "Sorting and organising cut files..."});
+	this.fire('statustextchanged', "Sorting and organising cut files...");
 	
 	if(this._pendingCutFiles.length == 0)
 		ReadAllFiles.call(this);
@@ -348,6 +354,7 @@ Polymer('file-organiser',{
 	active_tet_num: 0,
 	active_exp: null,
 	active_cut: null,
+	_pendingfiles: null,
 	_pendingCutFiles: [], //holds the cut files that are yet to be assign to a trial
 	exps: [],
 	expFromName: {}, //the same entries as exps, but here it is key-value with key=exp name, rather than an array 
@@ -372,6 +379,8 @@ Polymer('file-organiser',{
 		console.log("need to switch to tet-" + to);
 	},
 	active_expChanged: function(from,to){
+		if(!from)
+			this.fire('statustextchanged','');
 		document.title = to.name + ' [Cutting GUI]';
 		UpdateURLHistory(to.name,this.active_tet_num);
 		console.log("need to switch to exp " + to.name);

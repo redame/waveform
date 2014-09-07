@@ -154,7 +154,7 @@ Useage:
 			e.preventDefault();
 			this.fullyshowing = false;
 			this.DocumentDragEnd();
-			this.fire('filesdropped',e.dataTransfer.files);
+			this.asyncFire('filesdropped',e.dataTransfer.files);
 		},
 		ready: function(){
 			window.document.ondragover = this.DocumentDragOver.bind(this);
