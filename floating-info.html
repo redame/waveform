@@ -4,9 +4,16 @@ BY: DM
 
 
 TODO:  don't let the info go offscreen - knock it back in if need be.
+TODO: need to fire event when closed so that temporary panes can be removed from DOM when closed.
+
+By default it is hidden. To show/close the info use the .show/.close/.toggle methods.  You *must* supply and index argument to these methods,
+which will be used to change the show/close value wihtin an array.  If any elements in the array are set to true the info will be shown.  The reason for this
+is that there may be several competing things trying to show/hide the info and this system should allow them each a "voice".
+
+When closemode="true", mouseover the info will show a red cover pane, which you can click to close the info...this will reset the show/close array to be fully closed.
 
 USEAGE:
-	<floating-info>
+	<floating-info closemode="false">
 		<floating-info-title>
 			This is my title.
 		</floating-info-title>
@@ -15,6 +22,8 @@ USEAGE:
 			mouse down here will not cause the element to start dragging, but mousedown anywhere else will...that's because of the nodrag attribute used.
 		</div>
 	</floating-info>
+	
+	
 -->
 <link rel="import" href="polymer/polymer.html">
 
@@ -33,6 +42,8 @@ USEAGE:
 	z-index:100;
 	cursor: move;
 	box-shadow: 3px 3px 7px #999;
+	top: 100px;
+	left: 400px;
 	}
 	.cover{
 	position: absolute;
@@ -116,15 +127,38 @@ USEAGE:
 		
 		return this._Document_MouseMove(event);
 	}
-		
+	
+	var any = function(arr){
+		for(var i=0;i<arr.length;i++)if(arr[i])
+			return true;
+		return false;
+	}
+	
 	Polymer('floating-info',{
-		_handLeft: 0,
-		_handTop: 0,
+		_handLeft: 0,  _handTop: 0, //these two properties store the position of the cursor within the pane at the start of a drag
+		_show: [], //if any elements in this array are true we show, otherwise we leave the info hidden
+		get isOpen(){
+				return any(this._show);
+			},
+		toggle: function(ind){
+			 this._show[ind] = !this._show[ind];
+			  this.style.display = any(this._show) ? 'block' : '' ;
+			},
+		show: function(ind){
+			this._show[ind] = 1;
+			this.style.display = any(this._show) ? 'block' : '' ;
+			},
+		close: function(ind){
+			this._show[ind] = 0;
+			this.style.display = any(this._show) ? 'block' : '' ;
+			},
 		ready: function(){
 			this.addEventListener('mousedown',Floating_MouseDown.bind(this));
+			this._show = [];
 		},
 		_coverClick: function(){
-			this.style.display = ''; //TODO: this doesn't do anything at the moment because display:block is not set explicity, rather a "showing" class is added..see main.css
+			this._show = [];
+			this.style.display = '' ;
 		}
 	});
 </script>

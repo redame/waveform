@@ -434,6 +434,7 @@ T.Tool.GrabIt = function(){
 	
 	var p = $(this).offset();
 	
+	//TODO: this needs to be upgraded to a floating info el...and we should aim to do away with jQuery
 	var $pane = $("<div class='floatinginfo grabbed_info'><div class='floating_title'>" + str + " (Grabbed)</div> </div>")
 			.append($("<div class='floating_body'/>").append($clone))
 			.translate(p.left +30,p.top +30)
@@ -447,6 +448,7 @@ T.Tool.GrabIt_DocumentKeyDown = function(e){
 	if (e.which != 32 || T.Tool.cState != T.Tool.STATES.NOTHING) 
 		return;
 	T.Tool.cState = T.Tool.STATES.GRABBER;
+    forEachInNodeList(document.getElementsByTagName('floating-info'),function(el){el.closemode=true;}) //TODO: really it would be better to have a global thing that the floating-info sees.
 	$('head').append(T.Tool.$GrabIt_Css);
 	$('body').on('mouseup','.grabbable',T.Tool.GrabIt);
 	e.preventDefault();
@@ -461,6 +463,7 @@ T.Tool.GrabIt_DocumentKeyUp = function(e){
 	T.Tool.cState = T.Tool.STATES.NOTHING;
 	$('body').off('mouseup','.grabbable',T.Tool.GrabIt);
 	T.Tool.$GrabIt_Css.remove();
+    forEachInNodeList(document.getElementsByTagName('floating-info'),function(el){el.closemode=false;})
 }
 
 $(document).on("keydown",T.Tool.GrabIt_DocumentKeyDown)

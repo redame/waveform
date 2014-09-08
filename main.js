@@ -155,7 +155,7 @@ T.DispHeadersForced = function(){
 }
 
 T.DispHeaders = function(status,filetype,forced){
-	if(!forced && !T.$file_info_pane.hasClass("showing"))
+	if(!forced && !T.$file_info_pane.get(0).isOpen)
 		return;
 		
 	//TODO: move to separate module
@@ -667,7 +667,7 @@ T.SetGroupOver = function(g){
 }
 
 T.ToggleHeaderInfo = function(){
-	T.$file_info_pane.toggleClass('showing');
+    T.$file_info_pane.get(0).toggle(0);
 	T.DispHeadersForced();
 }
 
@@ -685,25 +685,25 @@ T.ToggleHeaderInfo = function(){
 
 
 T.Toggle = function(info_name){
-	var $el = $('.floating_layer').find("." + info_name); 
-	return function(){$el.toggleClass('showing');};
+    var el = document.getElementsByClassName(info_name)[0]; //TODO: previously this clasname search was limited to floating layers...may want to do that again.
+	return function(){el.toggle(0);};
 }
 
 T.InitFloatingInfo = function(){
 	var $floating_layer = $('.floating_layer');
 	$('.info_linked').each(function(){
 		var info_name = $(this).data('info-name');
-		$(this).data('$info',$floating_layer.find('.' + info_name));
+		$(this).data('elInfo',$floating_layer.find('.' + info_name).get(0));
 	})
 	.on('mouseenter',function(){
-		$(this).data('$info').css({display:'block'});
+		$(this).data('elInfo').show(1);
 	})
 	.on('mouseleave',function(){
-		$(this).data('$info').css({display:''});
+		$(this).data('elInfo').close(1);
 	})
 	.on('mousedown',function(e){
 		if(e.button != 0 || e.altKey)
-			$(this).data('$info').toggleClass('showing');
+			$(this).data('elInfo').toggle(0);
 	});
 }
 

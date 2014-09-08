@@ -30,6 +30,11 @@ var endian = (function(){
 })();
 
 
+var forEachInNodeList = function(nodelist,foo){
+Array.prototype.forEach.call(Array.prototype.slice.call(nodelist), foo); //no wonder I've been using jQuery...why on earth does this have to be so lengthy?
+}
+	
+    
 //Custom jQUery plugin
 // translate
 $.fn.translate = function(x,y){
