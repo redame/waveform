@@ -1,3 +1,3 @@
 ## Genepipe
 
-<img src="diagram.png">
+<img src="genepipediagram.png">
