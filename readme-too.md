@@ -14,7 +14,7 @@ The _genome_ defines a non-circular set of dependencies between _genes_.  The _g
 The _genome_ is defined using string identifiers for _genes_, but it is then compiled on page-load into a list with numerical _gene-ids_.  These _gene-ids_ are assigned such that every _gene_ has a higher _gene-id_ than all its dependencies.
 
 
-_Genepipe_ contains the following classes: `gene`, `allele`, `genotype`. The `gene` instances exist in an array called the `genome`; the `alleles` for each `gene` exist in a list, which itself forms a list called the `genepool`; the `genotypes` exist in a list called an `organism`, of which there may be several.
+_Genepipe_ contains the following classes: `gene`, `allele`, `genotype` and `immutable`. The `gene` instances exist in an array called the `genome`; the `alleles` for each `gene` exist in a list, which itself forms a list called the `genepool`; the `genotypes` exist in a list called an `organism`, of which there may be several.
 
 **The `gene` class** has the following properties:
 
@@ -52,3 +52,11 @@ Note that only one value is passed to this function, so if it requires multiple 
 * `allele` - the `allele` within the `genepool` currently assigned to this `gene` in the `organism` 
 * `context` - stuff required for rendering to DOM etc. This is what you pass for adding/removing values
 in the `allele.context_list`
+
+**The `imutable` class** is used to manage copies of immutable data across muliple threads. It has the following properties:
+* `data` - the value of the immutable which should be treated as immutable, or `undefined` if no data is present
+* `id` - the unique identifier for the immutable, assigned on the main thread.
+ 
+
+**Multi-threading**
+A central feature of genepipe is that it uses webworkers to do multithreaded processing.  All the `update` functions are combined into one single string, together with some worker "admin" code, and then this string of code is launched multiple times as a pool of webworkers.  The admin code running on each worker is respondible for receiveing and managing a list of update requests from the main thread. One of the major complciations of this is the need to ensure that all the requierd immutables are present on those threads that need them and get deleted when they are no longer required.
