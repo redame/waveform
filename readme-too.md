@@ -52,6 +52,7 @@ Note that only one value is passed to this function, so if it requires multiple 
 * `value` - reference to immutable value for the allele
 * `context_list` - a list of contexts, with which to call the `gene`'s `render` function, i.e. `this=context_list[i]`
 *	`pending_initilaisation` - a flag which is set to `true` until a context or dependency is added. This stops it being deleted before it’s been fully initialised.
+* `value_skletal` - see _optimised pathways_ section below.
 
 
 **The `genotype` class** has the following properties:
