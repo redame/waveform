@@ -65,7 +65,10 @@ A central feature of genepipe is that it uses webworkers to do multithreaded pro
 
 **Optimised paths**   
 
-In a number of situations a paritcular set of computation genes may have been designed in a very general way, such that they will function for all possible inputs.  But in many real world cases there may be a significant simplification that can be used. This may be because of certain genes' values or it could be because some potential allele dependants are not present in the genepool.  To take advantage of possible optimisations there are a couple of features available.  _TODO: allele watcher, variant dependencies, estiamate function_
+In a number of situations a paritcular set of computation genes may have been designed in a very general way, such that they will function for all possible inputs.  But in many real world cases there may be a significant simplification that can be used. This may be because of certain genes' values or it could be because some potential allele dependants are not present in the genepool.  To take advantage of possible optimisations there are a couple of features available:
+* The `gene` and `allele` classes contain `dependencies_direct_alt`, and `update_alt`properties which are arrays of the length `m`, where `m` is the numebr of alternative pathways available to compute the given gene. The items of the `dependencies_direct_alt` array are subarrays corresponding to the dependcy `genes`/`alleles` for the `i`th alternative pathway, and the `update_alt` gives the update function for the `i`th pathway.
+* The `gene` class contains an `estimate` property which is a function that should be very fast to compute. It will be provided with a list of its dependencies' values and must compute an estimate of the execution time for the update function (in arbitrary units).  In addition it must compute some skeletal output values (e.g. matrix dimensions, sparsity, etc...these could be estiamtes based on small random samples).  These skeletal values will be passed on to `estiamte` functions lower down the dependency path, which means that `estimate` functions should be willing to accept not just fully calcualted values, but also these skeletal values.
+* _TODO: allele watcher_
 
 
 ** Value streaming **
