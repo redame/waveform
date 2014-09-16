@@ -71,6 +71,9 @@ In a number of situations a paritcular set of computation genes may have been de
 * _TODO: allele watcher_
 
 
-** Value streaming **
+**Value streaming**
 
 In some cases, computation may take so long that it because worth streaming partial results. _TODO: more detail_
+
+**Templated genes**
+If the genome contains a number of genes doing very similar things, it may make sense for them to share the same `update`function and various other bits of the genepipe machinery.  We facilitate this via `template genes`, which look like normal `genes` when they are defined, except that they have a `repeat` property which specifies how many copies of them should exist in the genome. When refereing to `template genes` in a dependency list, you should use `"that_gene_name i"` rather than just `"that_gene_name"`.  This `i` will refer to the template isntance number when used within other templated genes.  At some point more interesting semantics like `i+1` and `i-1` and `0` etc. may be supported.
