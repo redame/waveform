@@ -58,5 +58,11 @@ in the `allele.context_list`
 * `id` - the unique identifier for the immutable, assigned on the main thread.
  
 
-**Multi-threading**
+**Multi-threading**    
+
 A central feature of genepipe is that it uses webworkers to do multithreaded processing.  All the `update` functions are combined into one single string, together with some worker "admin" code, and then this string of code is launched multiple times as a pool of webworkers.  The admin code running on each worker is respondible for receiveing and managing a list of update requests from the main thread. One of the major complciations of this is the need to ensure that all the requierd immutables are present on those threads that need them and get deleted when they are no longer required.
+
+
+**Optimised paths**   
+
+In a number of situations a paritcular set of computation genes may have been designed in a very general way, such that they will function for all possible inputs.  But in many real world cases there may be a significant simplification that can be used. This may be because of certain gene's values or it could be because some potential allele dependants are not present in the genepool.
