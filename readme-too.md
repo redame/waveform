@@ -66,3 +66,8 @@ A central feature of genepipe is that it uses webworkers to do multithreaded pro
 **Optimised paths**   
 
 In a number of situations a paritcular set of computation genes may have been designed in a very general way, such that they will function for all possible inputs.  But in many real world cases there may be a significant simplification that can be used. This may be because of certain genes' values or it could be because some potential allele dependants are not present in the genepool.  To take advantage of possible optimisations there are a couple of features available.  _TODO: allele watcher, variant dependencies, estiamate function_
+
+
+** Value streaming **
+
+In some cases, computation may take so long that it because worth streaming partial results. _TODO: more detail_
