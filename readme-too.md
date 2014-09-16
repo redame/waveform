@@ -33,14 +33,17 @@ return G(a,b,c);
 function(val){ //val is the allele's value
   //do some plotting etc. here using the value
 }
-```
+```  
+Note that only one value is passed to this function, so if it requires multiple values, an extra gene should be created as a proxy...that gene can combine multiple values into an object, which (like everything else) we then treat as a single immutable value in its own right.   
+
 * `update_streamed` - see _value streaming_ section below.
 * `estimate` - see _optimised pathways_ section below.
 * `dpendencies_direct_alt` - see _optimised pathways_ section below.
 * `update_alt` - see _optimised pathways_ section below.
 * `update_streamed_alt` - see _optimised pathways_ section below.
-* `existence_dependencies_direct` - see _optimised pathways_ section below.
-Note that only one value is passed to this function, so if it requires multiple values, an extra gene should be created as a proxy...that gene can combine multiple values into an object, which (like everything else) we then treat as a single immutable value in its own right.
+* `existence_dependencies_direct` - see _optimised pathways_ section below.   
+
+
 
 
 
