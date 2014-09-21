@@ -154,7 +154,7 @@ G.AddGene('dir_bin_inds_full',['dir']);
 G.AddGene('dir_bin_inds',['dir_bin_inds_full','pos_mask']);
 G.AddGene('dir_dwell',['dir_bin_inds']);
 G.AddGene('spike_dir_bin_inds',['spike_pos_inds','dir_bin_inds_full']);
-G.AddGene('c_dir_bin_inds_full i',['spike_dir_bin_inds','c_inds i']);
+G.AddGene('c_dir_bin_inds_full i',['spike_dir_bin_inds','c_inds i'],undefined,{repeat: N_CUT_SLOTS});
 G.AddGene('xy_bin_inds_full',['xy']); 
 G.AddGene('xy_bin_inds',['xy_bin_inds_full','pos_mask']); 
 G.AddGene('spike_xy_bin_inds',['xy_bin_inds_full','spike_pos_inds']);
@@ -163,9 +163,9 @@ G.AddGene('c_dir_bin_inds i',['c_dir_bin_inds_full i'],undefined,{repeat: N_CUT_
 G.AddGene('c_dir_rm i',['c_dir_bin_inds i','dir_dwell'],undefined,{repeat: N_CUT_SLOTS});
 G.AddGene('c_xy_bin_inds_full i',['c_inds i','spike_xy_bin_inds'],undefined,{repeat: N_CUT_SLOTS})
 
-G.AddGene('c_xy_bin_inds i',['c_inds i','c_xy_bin_inds_full','spike_mask'],undefined,{repeat: N_CUT_SLOTS});
+G.AddGene('c_xy_bin_inds i',['c_inds i','c_xy_bin_inds_full i','spike_mask'],undefined,{repeat: N_CUT_SLOTS});
 
-G.AddGene('c_xy_rm i',['c_xy_bin_inds','xy_dwell'],
+G.AddGene('c_xy_rm i',['c_xy_bin_inds i','xy_dwell'],
 	function(c_pos_inds){
 		//TODO:
 	},

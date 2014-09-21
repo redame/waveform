@@ -54,31 +54,53 @@ nodeList must be an array of objects that have the following properties:
             // Create the input graph
             var g = new dagreD3.Digraph();
             
+			var extraCss = {labelStyle: 'fill: #00f;'}
+			
+            for(var i=0; i<nodeList.length;i++){
+				var x= nodeList[i].repeat!=-1 ?  JSON.parse(JSON.stringify(extraCss))  : {}; //clone;
+				x.label = nodeList[i].name;
+                g.addNode(i,x);
+            }
+			extraCss = {style: 'stroke: #00f; stroke-width: 3px;'};
+			
             for(var i=0; i<nodeList.length;i++)
-                g.addNode(i,{label: nodeList[i].name});
-                
-            for(var i=0; i<nodeList.length;i++)
-                for(var j=0; j<nodeList[i].directAfter.length;j++)
-                    g.addEdge(null,i,nodeList[i].directAfter[j].id);
+                for(var j=0; j<nodeList[i].directBefore.length;j++)
+                    g.addEdge(null,nodeList[i].directBefore[j].id,i, nodeList[i].directBeforeSub[j] ? extraCss : undefined);
             
             // Create the renderer
             var renderer = new dagreD3.Renderer();
-
-            /*
-            // Override drawNodes to add nodeclass as a class to each node in the output
-            // graph.
+			var svg = this.$.thesvg;
+            
+            // Override drawNodes to add repeats
             var oldDrawNodes = renderer.drawNodes();
             renderer.drawNodes(function(graph, root) {
               var svgNodes = oldDrawNodes(graph, root);
-              svgNodes.each(function(u) { d3.select(this).classed(graph.node(u).nodeclass, true); });
+				svgNodes.each(function(u) { 
+					if(nodeList[u].repeat != -1){
+						var newRect = this.firstChild.cloneNode();
+						newRect.setAttribute('x',parseInt(newRect.getAttribute('x'))+5);
+						newRect.setAttribute('y',parseInt(newRect.getAttribute('y'))+5);
+						this.insertBefore(newRect,this.firstChild);
+						var w = parseInt(newRect.getAttribute('width'));
+						var x = parseInt(newRect.getAttribute('x'));
+						var t = document.createElementNS(svg.namespaceURI,'text');
+						t.setAttribute('text-anchor','left');
+						t.setAttribute('style','fill: #00f');
+						var ts = document.createElementNS(svg.namespaceURI,'tspan');
+						ts.setAttribute('x',w+x+4);
+						ts.innerHTML = "x" + nodeList[u].repeat;
+						t.appendChild(ts);
+						this.appendChild(t);
+					}
+				});
               return svgNodes;
             });
-            */
+            
             
             // Disable pan and zoom
             renderer.zoom(false);
             
-            var svg = this.$.thesvg;
+            
             
             // Run the renderer. This is what draws the final graph.
 
