@@ -7,6 +7,8 @@
 <title>Cutting GUI</title>
 <link rel="stylesheet" type="text/css" href="main.css">
 <script src="polymer/platform.js"></script>
+<link rel="import" href="polymer/polymer.html"> <!-- TODO: this is needed for genepipe.js...if and when we turn it into a component we can remove this line-->
+
 <link rel="import" href="polymer/core-splitter.html">
 <link rel="import" href="polymer/core-tooltip.html">
 <link rel="import" href="polymer/core-icon-button.html">
@@ -146,6 +148,11 @@
 		<br><br>
 	</floating-info>
 	
+	<floating-info class="application_map_info" style="max-width:initial;left:100px;">
+		<floating-info-title>Map of the application's structure</floating-info-title>
+		<div id='genepipe_viz'>click the button to generate the map</div>
+	</floating-info>
+	
 </div>
 
 
@@ -187,6 +194,10 @@
 			
 	<core-tooltip label="position post processing settings">
 		<core-icon-button icon="settings-applications" id='pos_settings' class="info_linked" data-info-name='pos_info'></core-icon-button>
+	</core-tooltip>
+
+	<core-tooltip label="appplication map">
+		<core-icon-button icon="language" id='application_map' class="info_linked" data-info-name='application_map_info'></core-icon-button>
 	</core-tooltip>
 	
 	<core-tooltip label="channel 1 [1]">
@@ -289,22 +300,35 @@
 <script src="jquery.min.js"></script>  
 <script src="jquery.mousewheel.min.js"></script>
 <script src="keymaster.min.js"></script>  
+
 <script src="utils.js"></script>
+<!--
 <script src="worker-bridge.js"></script>
 <script src="Mlib.js"></script>
+-->
+
 <!--<script src="webgl-debug.js"></script> -->
 
 <!-- main and T.Tool deal with the miscellaneous interaction tasks and persistence of settings etc.-->
+
 <script src="main.js"></script>
+<!--
 <script src="tool.js"></script>
+-->
 
 <!-- T.WV, T.TC, T.RM and T.CP display different plots of the data -->
+<!--
 <script src="ratemap.js"></script>
 <script src="temporalcorr.js"></script>
 <script src="cluster-plot.js"></script>
 <script src="webgl-waveforms.js"></script>
 <script src="eeg.js"></script>
+-->
 
+<script src="https://google.github.io/traceur-compiler/bin/traceur.js"></script>
+<script src="https://google.github.io/traceur-compiler/src/bootstrap.js"></script>
+  
+<script src="genepipe.js" type="module"></script>
 
 </body>
 </html>

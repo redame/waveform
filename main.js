@@ -578,6 +578,7 @@ T.StoreData = function(){
 }
 
 T.ApplyStoredSettingsA = function(){
+	return; 
 	if(localStorage.state){
 		//T.ORG.SwitchToTet(localStorage.tet || 1);
 		T.xFactor = localStorage.xFactor || 2;
@@ -587,12 +588,7 @@ T.ApplyStoredSettingsA = function(){
         T.Tool.PainterState.r = parseInt(localStorage.painterR) || 20;
         T.CP.SetSize(parseInt(localStorage.clusterPlotSize) || 128);
 		T.SetDisplayIsOn({chanIsOn: JSON.parse(localStorage.chanIsOn), mapIsOn: JSON.parse(localStorage.mapIsOn), tAutocorrIsOn: JSON.parse(localStorage.tAutocorrIsOn)});
-		T.$main_toolbar.toggle(localStorage.showToolbar === undefined || localStorage.showToolbar == "true")
 		
-		if(parseInt(localStorage.FSactive) || localStorage.FSactive=="true") 
-			T.ToggleFS();//it starts life in the off state, so this turns it on 
-			
-
 	}else{
 		T.SetDisplayIsOn({chanIsOn: [1,1,1,1]});
 	}
@@ -609,9 +605,13 @@ T.ApplyStoredSettingsB = function(e) {
 			el_n_val[0].setSize(el_n_val[1],'%')
 	});
 
+	document.getElementById('the_file_drop').fullyshowing = false
+	
+	/*
 	T.RM.SetCmPerBin(parseFloat(localStorage.BIN_SIZE_CM || "2.5"));
     T.RM.SetSmoothingW(parseInt(localStorage.rmSmoothingW || "2"));
 	T.TC.SetDeltaT(parseInt(localStorage.tcDeltaT || "500"));
+	*/
 	//T.ORG.SetPosSmoothing(parseFloat(localStorage.posSmoothing || "0.2"));
 	//T.ORG.SetPosMaxSpeed(parseFloat(localStorage.posMaxSpeed || "5"));
 }
@@ -730,6 +730,10 @@ T.Copy = function(e){
     }
 }
 
+T.ToggleMap = function(){
+	document.getElementsByClassName('application_map_info')[0].toggle(0);
+	G.ShowGenome(document.getElementById('genepipe_viz')); //this does somethign the first time and then after that it just stays rendered.
+}
 
 T.InitKeyboardShorcuts = function(){
 	// KEYBOARD SHORTCUTS from keymaster  (github.com/madrobby/keymaster)
@@ -760,6 +764,7 @@ T.InitKeyboardShorcuts = function(){
 	key('e',function(){if(T.groupOver.g>0 || T.groupOver.g==0) T.Tool.SetPainterDestGroup(T.groupOver.g);});
 	key('f, shift+f',function(){if(T.groupOver.g>0 || T.groupOver.g==0) T.Tool.PainterSrc_Toggle(T.groupOver.g);});
 	key('s',function(){if(T.groupOver.g>0 || T.groupOver.g==0) T.Tool.Swap(T.groupOver.g);});
+	key('m, alt+m',T.ToggleMap);
     $(document).on('keydown',T.Copy);
 
 }
@@ -777,6 +782,7 @@ T.InitButtons = function(){
 	$('.github_button').on('click',T.ShowGitHub);
 	$('.menu_toggle').mouseup(T.ToggleToolbar);
 	$('#drift_button').click(T.DriftButtonClick);
+	$('#application_map').click(T.ToggleMap);
 }
 
 $('core-tooltip').on('mouseenter',function(){this.setPosition();}); //POLYMER BUGFIX

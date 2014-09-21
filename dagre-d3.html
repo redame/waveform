@@ -1,0 +1,106 @@
+<!--
+CUSTOM ELEMENT: dagre-d3
+BY: DM, but all the hard work is from [github.com/cpettitt/dagre-d3]
+
+
+USEAGE:
+    <dagre-d3 id="my_graph"></dagre-d3>
+    <script>
+        document.getElementById('my_graph').Render(nodeList);
+	</script>
+    
+nodeList must be an array of objects that have the following properties:
+    .id - the index of the node in the nodeList array
+    .name - string giving the display name of the node
+    .directAfter - array of node objects which are to be shown as descending from the current node
+-->
+<link rel="import" href="polymer/polymer.html">
+
+<polymer-element name="dagre-d3" attributes=''> 
+<template>
+    <style>
+    text {
+      font-weight: 300;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+      font-size: 14px;
+    }
+    
+    .node rect {
+      stroke: #999;
+    }
+    
+    .edgePath path {
+      stroke: #333;
+      stroke-width: 1.5px;
+      fill: none;
+    }
+	#info{
+		margin: 0 auto;
+		max-width: 300px;
+		min-height: 100px;
+		background: #ccc;
+		border: 1px solid #000;
+	}
+	</style>
+    <svg width=650 height=680 id="thesvg"></svg>
+	<div id='info'></div>
+</template>
+<script src="d3.js"></script>
+<script src="dagre-d3.js">move cursor over map for info</script>
+
+<script>
+	Polymer('dagre-d3',{
+        Render: function(nodeList){
+            // Create the input graph
+            var g = new dagreD3.Digraph();
+            
+            for(var i=0; i<nodeList.length;i++)
+                g.addNode(i,{label: nodeList[i].name});
+                
+            for(var i=0; i<nodeList.length;i++)
+                for(var j=0; j<nodeList[i].directAfter.length;j++)
+                    g.addEdge(null,i,nodeList[i].directAfter[j].id);
+            
+            // Create the renderer
+            var renderer = new dagreD3.Renderer();
+
+            /*
+            // Override drawNodes to add nodeclass as a class to each node in the output
+            // graph.
+            var oldDrawNodes = renderer.drawNodes();
+            renderer.drawNodes(function(graph, root) {
+              var svgNodes = oldDrawNodes(graph, root);
+              svgNodes.each(function(u) { d3.select(this).classed(graph.node(u).nodeclass, true); });
+              return svgNodes;
+            });
+            */
+            
+            // Disable pan and zoom
+            renderer.zoom(false);
+            
+            var svg = this.$.thesvg;
+            
+            // Run the renderer. This is what draws the final graph.
+
+            var layout = renderer.run(g, d3.select(svg));
+
+            // Center the graph
+            var b = svg.getBBox();
+            svg.setAttribute('width', b.width);
+            svg.setAttribute('height', b.height);
+			var elInfo = this.$.info;
+			d3.select(svg).selectAll("rect").on("mouseover", function(){
+				var id = d3.select(this).data()[0];
+				if(id)
+					elInfo.innerHTML = "<b>" + nodeList[id].name + "</b><br>" +
+										"directly before: " + nodeList[id].directBefore.map(function(x){return x.name}).join(", ") + "<br>" +
+										"directly after: " + nodeList[id].directAfter.map(function(x){return x.name}).join(", ") + "<br>" +
+										(nodeList[id].infoHTML ? nodeList[id].infoHTML : "");
+				else
+					elInfo.innerHTML = "move cursor over map for info";
+			});		  
+            
+        }
+    });
+</script>
+</polymer-element>
