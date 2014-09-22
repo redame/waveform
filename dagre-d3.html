@@ -13,6 +13,10 @@ nodeList must be an array of objects that have the following properties:
     .id - the index of the node in the nodeList array
     .name - string giving the display name of the node
     .directAfter - array of node objects which are to be shown as descending from the current node
+	.repeat - -1, means it doesn't repeat, any other value will put it into repeat-rendering mode, and the value is shown to the right
+	
+	The rendering is super messy...but it shows what we need for now.
+
 -->
 <link rel="import" href="polymer/polymer.html">
 
@@ -35,14 +39,33 @@ nodeList must be an array of objects that have the following properties:
       fill: none;
     }
 	#info{
-		margin: 0 auto;
-		max-width: 300px;
+		margin: 5px;
 		min-height: 100px;
 		background: #ccc;
 		border: 1px solid #000;
 	}
+	#svg_wrapper{
+		max-width: 1200px;
+		overflow-x: scroll;
+		cursor: default;
+	}
+	::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+	}
+	::-webkit-scrollbar-button {
+	width: 0;
+	height: 0;
+	display: none;
+	}
+	::-webkit-scrollbar-thumb {
+	background-color: rgba(0,0,0,0.2);
+	-webkit-box-shadow: inset 1px 1px 0 rgba(0,0,0,0.10),inset 0 -1px 0 rgba(0,0,0,0.07);
+	}
 	</style>
+	<div id='svg_wrapper' nodrag>
     <svg width=650 height=680 id="thesvg"></svg>
+	</div>
 	<div id='info'></div>
 </template>
 <script src="d3.js"></script>
@@ -61,11 +84,15 @@ nodeList must be an array of objects that have the following properties:
 				x.label = nodeList[i].name;
                 g.addNode(i,x);
             }
-			extraCss = {style: 'stroke: #00f; stroke-width: 3px;'};
-			
+			var edgeStyles = [];
+			var edgeRepeats = [];
+			extraCss = {style:'stroke: #00f;'}; //it seems some things have to be done here and some in path renderer...maybe there's a way of avoiding this mess...?...ahh it's the child hmm
             for(var i=0; i<nodeList.length;i++)
-                for(var j=0; j<nodeList[i].directBefore.length;j++)
-                    g.addEdge(null,nodeList[i].directBefore[j].id,i, nodeList[i].directBeforeSub[j] ? extraCss : undefined);
+                for(var j=0; j<nodeList[i].directBefore.length;j++){
+					edgeStyles.push(nodeList[i].directBefore[j].directAfter.length > 4 ? 'opacity: 0.3;' : '');//if there are loads of things after the jth item then weaken the arrow opacity.
+					edgeRepeats.push(nodeList[i].directBefore[j].repeat != -1 ? 1: 0);
+                    g.addEdge(null,nodeList[i].directBefore[j].id,i,nodeList[i].directBefore[j].repeat != -1   ? JSON.parse(JSON.stringify(extraCss))  : {});
+				}
             
             // Create the renderer
             var renderer = new dagreD3.Renderer();
@@ -96,6 +123,18 @@ nodeList must be an array of objects that have the following properties:
               return svgNodes;
             });
             
+			//override drawedgepaths to weaken the opacity of the most prolific edge-spawning nodes
+			var oldDrawEdgePaths = renderer.drawEdgePaths();
+			renderer.drawEdgePaths(function (graph, root) {
+				var svgEdges = oldDrawEdgePaths(graph, root);
+				svgEdges.each(function(s,u){
+					this.setAttribute('style',edgeStyles[u]);
+						
+				});
+				return svgEdges;
+			});
+
+
             
             // Disable pan and zoom
             renderer.zoom(false);
@@ -122,6 +161,15 @@ nodeList must be an array of objects that have the following properties:
 					elInfo.innerHTML = "move cursor over map for info";
 			});		  
             
+			// duplicate the path data for repeated edges...adding 5 to x and y ...this is super hacky.
+			d3.select(svg).selectAll(".edgePath").each(function(s,u){
+				if(edgeRepeats[u]){
+					var d = this.firstChild.getAttribute('d');
+					d = d + "," + d.match(/[a-zA-Z]?[0-9\.]+/g).map(function(x){return x.match(/[A-Za-z]*/)[0] + (parseFloat(x.match(/[0-9\.]+/)[0])+5)}).join(",");
+					this.firstChild.setAttribute('d',d);
+				}
+			});
+			
         }
     });
 </script>

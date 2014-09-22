@@ -150,12 +150,12 @@ G.AddGene('c_group i',['cut'],
 	},
 	{repeat: N_CUT_SLOTS});
 
-G.AddGene('dir_bin_inds_full',['dir']);
+G.AddGene('dir_bin_inds_full',['dir','settings']);
 G.AddGene('dir_bin_inds',['dir_bin_inds_full','pos_mask']);
 G.AddGene('dir_dwell',['dir_bin_inds']);
 G.AddGene('spike_dir_bin_inds',['spike_pos_inds','dir_bin_inds_full']);
 G.AddGene('c_dir_bin_inds_full i',['spike_dir_bin_inds','c_inds i'],undefined,{repeat: N_CUT_SLOTS});
-G.AddGene('xy_bin_inds_full',['xy']); 
+G.AddGene('xy_bin_inds_full',['xy','settings']); 
 G.AddGene('xy_bin_inds',['xy_bin_inds_full','pos_mask']); 
 G.AddGene('spike_xy_bin_inds',['xy_bin_inds_full','spike_pos_inds']);
 G.AddGene('xy_dwell',['xy_bin_inds']);
@@ -165,14 +165,14 @@ G.AddGene('c_xy_bin_inds_full i',['c_inds i','spike_xy_bin_inds'],undefined,{rep
 
 G.AddGene('c_xy_bin_inds i',['c_inds i','c_xy_bin_inds_full i','spike_mask'],undefined,{repeat: N_CUT_SLOTS});
 
-G.AddGene('c_xy_rm i',['c_xy_bin_inds i','xy_dwell'],
+G.AddGene('c_xy_rm i',['c_xy_bin_inds i','xy_dwell','settings'],
 	function(c_pos_inds){
 		//TODO:
 	},
 	{repeat: N_CUT_SLOTS});
 	
-G.AddGene('pos_mask')
-G.AddGene('spike_mask',['pos_mask'])
+G.AddGene('pos_mask',['settings'])
+G.AddGene('spike_mask',['pos_mask','settings'])//there can be spike masking in addition to pos masking, e.g. speed and phase
 
 G.AddGene('pos_header',
 	['pos_file'],
@@ -225,22 +225,23 @@ G.AddGene('tet_file',
     });
 	
 G.AddGene('xy',
-    ['pos_header','pos_buffer']
+    ['pos_header','pos_buffer','settings']
 )
 
 G.AddGene('spike_pos_inds',['tet_times']);
 
 G.AddGene('dir',['xy']) // May want to produce xy and dir together.
 
-G.AddGene('c_waves',['gl_c_data','gl_v_data'])
+G.AddGene('c_waves i',['gl_c_data','gl_v_data','c_group i'],undefined,{repeat: N_CUT_SLOTS})
 
 G.AddGene('pos_buffer',['pos_file'])
 
-G.AddGene('c_spike_times_full i',['tet_times','c_inds'],undefined,{repeat:N_CUT_SLOTS})
-G.AddGene('c_spike_times i',['c_spike_times_full i','c_inds','spike_mask'],undefined,{repeat:N_CUT_SLOTS})
+G.AddGene('c_spike_times_full i',['tet_times','c_inds i'],undefined,{repeat:N_CUT_SLOTS})
+G.AddGene('c_spike_times i',['c_spike_times_full i','c_inds i','spike_mask'],undefined,{repeat:N_CUT_SLOTS})
 
-G.AddGene('c_t_ac i',['c_spike_times'],undefined,{repeat:N_CUT_SLOTS})
+G.AddGene('c_t_ac i',['c_spike_times i','settings'],undefined,{repeat:N_CUT_SLOTS})
 
+G.AddGene('settings'); //remeber we are going to have a "library" of settings alleles to choose from, each of which can then be modified.
 
 G.BuildGenome();
 
