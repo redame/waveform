@@ -36,7 +36,7 @@ And below that, i.e. each of the cut_k's, looks like this:
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="scrollable-area.html">
 
-<polymer-element name="file-brick" noscript>
+<polymer-element name="file-brick" noscript attributes='forevermedium colora colorb superselected'>
 <template>
 	<style>
 	:host{
@@ -385,11 +385,7 @@ Polymer('file-organiser',{
 		exp: null,
 		tet_num: 0,
 		pos_smoothing: 0.2,
-		pos_max_speed: 5,
-		forevermedium: true,
-		colora: '',
-		colorb: '',
-		superselected: true
+		pos_max_speed: 5
 	},
 	_pendingfiles: null,
 	_pendingCutFiles: [], //holds the cut files that are yet to be assign to a trial
