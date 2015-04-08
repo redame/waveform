@@ -747,8 +747,8 @@ T.RM = function(BYTES_PER_SPIKE,BYTES_PER_POS_SAMPLE,POS_NAN,
 	$smoothingSlider.on("change",function(e){SetSmoothingW(this.value,true);});
 	SetBinSizeDeg(6);
     
-	ORG.AddCutChangeCallback(SlotsInvalidated);
-	ORG.AddFileStatusCallback(FileStatusChanged);
+	ORG.addEventListener('cut_change',SlotsInvalidated);
+	ORG.addEventListener('file_status_change',FileStatusChanged);
 	modeChangeCallbacks.push(SetRenderMode);
 	
 	

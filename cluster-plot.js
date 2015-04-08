@@ -233,7 +233,7 @@ T.CP = function($canvasParent,ORG,PALETTE_B,PALETTE_FLAG,modeChangeCallbacks){
 			T.ORG.GetTetAmplitudes(function(amps){
 										LoadTetrodeData(ORG.GetN(),amps);
 										if(status.cut == 3)
-											ORG.GetCut().ForceChangeCallback(SlotsInvalidated);
+											ORG.cut.ForceChangeCallback(SlotsInvalidated);
 									});
 		}
 
@@ -330,8 +330,8 @@ T.CP = function($canvasParent,ORG,PALETTE_B,PALETTE_FLAG,modeChangeCallbacks){
             T.Tool.SetPainterDestGroup(g);
     }
 
-	ORG.AddCutChangeCallback(SlotsInvalidated);
-	ORG.AddFileStatusCallback(FileStatusChanged);
+	ORG.addEventListener('cut_change',SlotsInvalidated);
+	ORG.addEventListener('file_status_change',FileStatusChanged);
 	modeChangeCallbacks.push(SetRenderMode);
 	
 	T.$cluster_panel.on({"mousemove": ClusterPlot_MouseMove,

@@ -717,7 +717,7 @@ T.WV = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,PALETTE_FLAG){
 		if(filetype == "tet"){
 			LoadTetrodeData(ORG.GetN(),ORG.GetTetBufferProjected());
 			if(status.cut == 3) //if we happened to have loaded the cut before the tet, we need to force to accept it now
-				ORG.GetCut().ForceChangeCallback(SlotsInvalidated);  //TODO: just invalidate all here directly
+				ORG.cut.ForceChangeCallback(SlotsInvalidated);  //TODO: just invalidate all here directly
 		}
 		
 	}
@@ -852,8 +852,8 @@ T.WV = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,PALETTE_FLAG){
 
 	Init(); //initialises all the webgl stuff without actually doing any data-specific stuff
 
-	ORG.AddCutChangeCallback(SlotsInvalidated);
-	ORG.AddFileStatusCallback(FileStatusChange);
+	ORG.addEventListener('cut_change',SlotsInvalidated);
+	ORG.addEventListener('file_status_change',FileStatusChange);
 	
 	return {canDoComplexRender : function(){return canDoComplexRender;},
 			SetPaletteMode: SetPaletteMode,

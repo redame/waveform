@@ -44,7 +44,7 @@ T.TileMouseDown = function(event){
 T.Tool.Swap = function(g){
     var ng = parseInt(prompt("Swap group " + g + " with:",g+""));
     if(ng >=0 && ng <= 256)
-        T.ORG.GetCut().SwapBandA(g,ng);
+        T.ORG.cut.SwapBandA(g,ng);
 }
 
 
@@ -209,7 +209,7 @@ T.Tool.TileMouseUp_MergerTarget = function(event){
 		ind_a = tmp;
 	}
 
-	T.ORG.GetCut().AddBtoA(ind_a,ind_b);	
+	T.ORG.cut.AddBtoA(ind_a,ind_b);	
 	T.Tool.EndMerger();
 	event.stopPropagation();
 
@@ -240,7 +240,7 @@ T.Tool.TileMouseDown_BeginSplitter = function(event){
 	var canvInfo = this.getCanvInfo(T.CANVAS_NUM_WAVE,event.pageX,event.pageY);
 	if(!canvInfo)
 		return;
-	var cut = T.ORG.GetCut();
+	var cut = T.ORG.cut;
 	var srcCutInds = cut.GetGroup(g);
 	var s = T.Tool.cState = T.Tool.STATES.SPLITTER;
 	s.usedCtrl = event.button != 2;
@@ -559,7 +559,7 @@ T.Tool.SetPainterDestGroup = function(g){
 											color: T.PALETTE_FLAG_CSS_TEXT[g]})
 				   .attr('data-group',g); //use proper data attr to match stickers in src and other categories.
 	T.Tool.PainterState.destGroup = g;
-	var c = T.ORG.GetCut();
+	var c = T.ORG.cut;
 	if(c){
 		c.GetExtraStuff().painterDest = g;
 		T.Tool.ClusterOthersUpdate(c);
@@ -574,7 +574,7 @@ T.Tool.SetPainterSrcGroups = function(gs){
 					+ "'>" + gs[i] + "</div>");
 	T.$painter_src.html(str.join(""));
 	T.Tool.PainterState.srcGroups = gs;
-	var c = T.ORG.GetCut();
+	var c = T.ORG.cut;
 	if(c){
 		c.GetExtraStuff().painterSrc = gs;
 		T.Tool.ClusterOthersUpdate(c);
@@ -605,7 +605,7 @@ T.Tool.PainterState = T.Tool.STATES.PAINTER;
 T.Tool.PainterState.r = 20; //TODO: lose this, and just use crosshair's r value
 T.Tool.PainterState.crosshair = document.getElementById('cluster_crosshair');
 T.Tool.PainterState.crosshair.r = 20;
-T.ORG.AddCutChangeCallback(T.Tool.ClusterPlotChangeCallback);
+T.ORG.addEventListener('cut_change',T.Tool.ClusterPlotChangeCallback);
 T.Tool.SetPainterDestGroup(1);
 T.Tool.SetPainterSrcGroups([0]);
 
@@ -625,7 +625,7 @@ T.Tool.Painter_DocumentMouseUp = function (e) {
 	s.$canv2 = undefined;
 	$(document).off("mouseup",T.Tool.Painter_DocumentMouseUp);
     var splitMasks = T.CP.ClusterMaskToSpikeMask(mask,s.canvInd,s.srcGroups);
-    var cut = T.ORG.GetCut();
+    var cut = T.ORG.cut;
     cut.TransplantFromAsToB(s.srcGroups, splitMasks, s.destGroup);
     T.Tool.cState = T.Tool.STATES.NOTHING;
 }

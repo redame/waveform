@@ -1,0 +1,63 @@
+<!--
+CUSTOM ELEMENT: scrollable-area
+BY: DM
+
+Useage:
+
+<scrollable-area>
+	<scrollable-area-top>this area remains fixed and shows a shaddown when the other bit is scroleld</scrollable-area-top>
+	this <b>is</b> the main area. <div>anything here will be scollable/div>
+</scrollable-area>
+
+-->
+
+
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<polymer-element name="scrollable-area-top" noscript>
+<template><content></content></template>
+</polymer-element>
+
+
+<polymer-element name="scrollable-area" vertical layout>
+<template>
+	<style>
+	#top{
+	position: relative;
+	}
+	.scrolled{
+	box-shadow: 0px 3px 10px 0px #bbb;
+	}
+	#main{
+	overflow-y: scroll;
+	}
+	::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+	}
+	::-webkit-scrollbar-button {
+	width: 0;
+	height: 0;
+	display: none;
+	}
+	::-webkit-scrollbar-thumb {
+	background-color: rgba(0,0,0,0.2);
+	-webkit-box-shadow: inset 1px 1px 0 rgba(0,0,0,0.10),inset 0 -1px 0 rgba(0,0,0,0.07);
+	}
+	</style>
+	<div id="top"><content select="scrollable-area-top"></content></div>
+	<div id="main" flex><content></content></div>
+</template>
+<script>
+	var mainScroll = function(e){
+		if(this.$.main.scrollTop > 3)
+			this.$.top.classList.add('scrolled'); 
+		else
+			this.$.top.classList.remove('scrolled'); 
+	}
+	
+	Polymer('scrollable-area',{
+		ready: function(){this.$.main.onscroll = mainScroll.bind(this);}
+	});
+</script>
+</polymer-element>

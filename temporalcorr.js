@@ -271,7 +271,7 @@ T.TC = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,$deltaTSlider,$deltaT
 			LoadTetrodeData(ORG.GetN(),ORG.GetTetTimes());
 			
 			if(status.cut == 3) //if we happened to have loaded the cut before the tet, we need to accept the cut now
-				ORG.GetCut().ForceChangeCallback(SlotsInvalidated);	
+				ORG.cut.ForceChangeCallback(SlotsInvalidated);	
 		}
 	}
 
@@ -281,8 +281,8 @@ T.TC = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,$deltaTSlider,$deltaT
 	}
 	$deltaTSlider.on("change",DeltaTSilder_Change );
 	
-	ORG.AddCutChangeCallback(SlotsInvalidated);
-	ORG.AddFileStatusCallback(FileStatusChanged);
+	ORG.addEventListener('cut_change',SlotsInvalidated);
+	ORG.addEventListener('file_status_change',FileStatusChanged);
 	
 	var theWorker = BuildBridgedWorker(workerFunction,["CreateAllSpikeTimes*","SetImmutable*","NewCut","SetMaxDeltaT"],["PlotHist*"],[PlotHist]);
 	//console.log("tmporalcorr BridgeWorker is:\n  " + theWorker.blobURL);

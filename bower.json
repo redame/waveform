@@ -1,0 +1,17 @@
+{
+  "name": "waveform",
+  "version": "0.4.0",
+  "authors": [
+    "Daniel Manson <d.manson.11@ucl.ac.uk>"
+  ],
+  "main": "index.html",
+  "dependencies": {
+    "webcomponentsjs": "~0.5.0",
+    "core-splitter": "Polymer/core-splitter#0.5.5",
+    "core-tooltip": "Polymer/core-tooltip#0.5.5",
+    "core-icon-button": "Polymer/core-icon-button#0.5.5",
+    "core-toolbar": "Polymer/core-toolbar#0.5.5",
+    "paper-slider": "Polymer/paper-slider#0.5.5",
+    "polymer": "Polymer/polymer#0.5"
+  }
+}

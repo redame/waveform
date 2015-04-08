@@ -27,7 +27,7 @@ T.floatingTopZ = 100;
 
 T.modeChangeCallbacks = [];
 
-
+T.ORG = document.getElementById('file_org');
 
 T.PlotPos = function(){
 	var buffer = T.ORG.GetPosBuffer();
@@ -489,7 +489,7 @@ T.ReorderNCut = function(){
 
 	var groups = []; //we build an array of (ind,len) pairs that we can then sort by <len>.
 
-	var cut = T.ORG.GetCut();
+	var cut = T.ORG.cut;
 	var G = cut.GetProps().G;
 	for(var i=0;i<=G;i++)
 		groups.push({ind: i,
@@ -528,7 +528,7 @@ T.ReorderACut = function(amps){
 	for(var i=0;i<N;i++)
 		amps_chan[i] = amps[i*4 + chan];
 
-	var mean_amps = M.accumarray(T.ORG.GetCut().GetAsVector(),amps_chan,"mean");
+	var mean_amps = M.accumarray(T.ORG.cut.GetAsVector(),amps_chan,"mean");
 
 	//TODO: I think there will be a bug if there are any empty groups beyond the end of the last occupied group, 
 
@@ -542,7 +542,7 @@ T.ReorderACut = function(amps){
 	var inds = [];
 	while(groups.length)
 		inds.push(groups.shift().ind);
-	T.ORG.GetCut().ReorderAll(inds);
+	T.ORG.cut.ReorderAll(inds);
 }
 
 
@@ -553,7 +553,7 @@ T.FilterHeader = function(){
 T.UndoLastAction = function () {
     if (T.Tool.cState != T.Tool.STATES.NOTHING)
         return;
-	var c = T.ORG.GetCut();
+	var c = T.ORG.cut;
 	if(c)
 		c.Undo();
 }
@@ -565,7 +565,7 @@ T.StoreData = function(){
 	localStorage.mapIsOn = JSON.stringify(T.mapIsOn);
 	localStorage.tAutocorrIsOn = JSON.stringify(T.tAutocorrIsOn);
 
-	localStorage.tet = T.ORG.GetTet();
+	localStorage.tet = T.ORG.tet_num;
 	localStorage.xFactor = T.xFactor;
 	localStorage.yFactor = T.yFactor;
     
@@ -578,16 +578,16 @@ T.StoreData = function(){
 	localStorage.paletteMode = T.paletteMode;
     localStorage.painterR = T.Tool.PainterState.r;
     localStorage.clusterPlotSize = T.CP.GetSize();
-    localStorage.splitterPercents = JSON.stringify($.map($('core-splitter').get(),function(el){return el.getSize('%');}));
+    localStorage.splitterPx = JSON.stringify($.map($('core-splitter').get(),function(el){return el.minSize;}));
 	localStorage.showToolbar = T.$main_toolbar.is(":visible");
 	
-	localStorage.posSmoothing = T.ORG.GetPosSmoothing();
-	localStorage.posMaxSpeed = T.ORG.GetPosMaxSpeed();
+	localStorage.posSmoothing = T.ORG.pos_smoothing;
+	localStorage.posMaxSpeed = T.ORG.pos_max_speed;
 }
 
 T.ApplyStoredSettingsA = function(){
 	if(localStorage.state){
-		T.ORG.SwitchToTet(localStorage.tet || 1);
+		T.ORG.tet_num = localStorage.tet || 1;
 		T.xFactor = localStorage.xFactor || 2;
 		T.yFactor = localStorage.yFactor;
 		T.$header_search.val(localStorage.headerFilter || '');
@@ -606,16 +606,16 @@ T.ApplyStoredSettingsB = function(e) {
 	$.map(
 		zip([
 			$('core-splitter').get(),
-			JSON.parse(localStorage.splitterPercents || "[30,30,25]") 
+			JSON.parse(localStorage.splitterPx || "[200,200,200]") 
 		]),function(el_n_val){
-			el_n_val[0].setSize(el_n_val[1],'%')
+			el_n_val[0].minSize = el_n_val[1] + 'px';
 	});
 
 	T.RM.SetCmPerBin(parseFloat(localStorage.BIN_SIZE_CM || "2.5"));
     T.RM.SetSmoothingW(parseInt(localStorage.rmSmoothingW || "2"));
 	T.TC.SetDeltaT(parseInt(localStorage.tcDeltaT || "500"));
-	T.ORG.SetPosSmoothing(parseFloat(localStorage.posSmoothing || "0.2"));
-	T.ORG.SetPosMaxSpeed(parseFloat(localStorage.posMaxSpeed || "5"));
+	T.ORG.pos_smoothing = parseFloat(localStorage.posSmoothing || "0.2");
+	T.ORG.pos_max_speed = parseFloat(localStorage.posMaxSpeed || "5");
 }
 
 
@@ -750,7 +750,7 @@ T.Copy = function(e){
         T.$hidden_clipboard.html('');
 		T.$hidden_clipboard.append("[" + T.ORG.GetExpName() + "] t" + T.ORG.GetTet());
 		if  (T.groupOver.g >0 || T.groupOver.g == 0){
-			T.$hidden_clipboard.append("c" + T.groupOver.g +  "  n=" + T.ORG.GetCut().GetGroup(T.groupOver.g).length + "<br>");
+			T.$hidden_clipboard.append("c" + T.groupOver.g +  "  n=" + T.ORG.cut.GetGroup(T.groupOver.g).length + "<br>");
 			T.$hidden_clipboard.append($(T.tiles[T.groupOver.g].getCopyOfCanvs(false)).children());
 		}
         var rng = document.createRange();
@@ -837,9 +837,9 @@ T.$file_info_pane = $('.file_info');
 T.$info_summary = $('.info_summary');
 T.$info_summary_text = $('.info_summary_text');
 T.$speedhist = $('#speedhist');
-T.ORG.AddFileStatusCallback(T.FinishedLoadingFile);
-T.ORG.AddCutActionCallback(T.CutActionCallback);	
-T.ORG.AddCutChangeCallback(T.SetGroupDataTiles);
+T.ORG.addEventListener('file_status_change',T.FinishedLoadingFile);
+T.ORG.addEventListener('cut_action',T.CutActionCallback);	
+T.ORG.addEventListener('cut_change',T.SetGroupDataTiles);
 
 $('.floating_layer').on("mousedown",".floatinginfo",T.FloatingInfo_MouseDown)
 $('input').on("mousedown",function(e){e.stopPropagation()}); //this is neccessary to allow the user to click inputs within a dragable floatinginfo

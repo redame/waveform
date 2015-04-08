@@ -1,0 +1,164 @@
+<!--
+CUSTOM ELEMENT: file-drop
+BY: DM
+
+presents a "pretty" drop zone for landing files.  Has the following event:
+filesdropped - provides a fileList object.
+
+Useage:
+
+<file-drop>
+    <file-drop-banner>drag &amp; drop files here</file-drop-banner>
+    <file-drop-badge>Tested with Chrome <img src="chromelogo.png" width="15px"/></file-drop-badge>
+    the following types of data files are recognised: 
+    <b><br>set | pos | tet | cut | clu</b><br>
+    you can drag further files onto the window at any point<br>
+    other file types will be ignored<br>
+    <div class="github_button github_button_filedrop">Go to <b>quickstart guide</b> on GitHub</div>
+<file-drop>
+-->
+<link rel="import" href="bower_components/polymer/polymer.html">
+<polymer-element name="file-drop-banner" noscript><content></content></polymer-element>
+<polymer-element name="file-drop-badge" noscript><content></content></polymer-element>
+
+<polymer-element name="file-drop" attributes="dropenabled fullyshowing">
+<template>
+    <style>
+    :host{
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    padding: 5px;
+    display: block;
+    text-align: center;
+    background: #FFFFFF;
+    color: #888;
+    z-index: 100;
+    }
+	#frame{
+    position: fixed;
+    margin: 40px;
+    border: 10px dashed #999;
+    right: 0px;
+    left: 0px;
+    bottom: 0px;
+    top: 0px;
+    background: -moz-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 32%, rgba(255,255,255,1) 37%, rgba(255,255,255,0) 55%, rgba(255,255,255,0) 62%);
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(32%,rgba(255,255,255,1)), color-stop(37%,rgba(255,255,255,1)), color-stop(55%,rgba(255,255,255,0)), color-stop(62%,rgba(255,255,255,0)));
+    background: -webkit-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 32%,rgba(255,255,255,1) 37%,rgba(255,255,255,0) 55%,rgba(255,255,255,0) 62%);
+    background: -o-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 32%,rgba(255,255,255,1) 37%,rgba(255,255,255,0) 55%,rgba(255,255,255,0) 62%);
+    background: -ms-radial-gradient(center, ellipse cover,  rgba(255,255,255,1) 32%,rgba(255,255,255,1) 37%,rgba(255,255,255,0) 55%,rgba(255,255,255,0) 62%);
+    background: radial-gradient(ellipse at center,  rgba(255,255,255,1) 32%,rgba(255,255,255,1) 37%,rgba(255,255,255,0) 55%,rgba(255,255,255,0) 62%);
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#00ffffff',GradientType=1 );
+    }
+	::content a{
+	cursor: pointer;
+	margin: 20px 0px 0px 0px;
+	border: 1px solid #999;
+	display: inline-block;
+	padding: 4px 10px 4px 10px;
+	border-radius: 4px;
+	background: #eee;
+	text-decoration: none;
+	color: inherit;
+	}
+	::content:a{
+	background: #ddd;
+	border-color: #777;
+	}
+	#banner{
+	font-size: 4em;
+	position: absolute;
+	bottom: 130px;
+	text-align: center;
+	width: 100%;
+	}
+	#badge{
+		position: absolute;
+		right: 60px;
+		bottom: 60px;
+		text-align: right;
+	}
+	#text{
+	margin: auto;
+	position: absolute;
+	height: 100px;
+	bottom: 0px;
+	top: 0px;
+	left: 0px;
+	right: 0px;
+	}
+	
+	@-webkit-keyframes spaceboots {
+		/* Taken from http://www.cssreset.com/demos/css3/webkit-animation-shake-links/spaceboots.html */
+		0%   { -webkit-transform: translate(2px, 1px)   rotate(0deg); }
+		10%  { -webkit-transform: translate(-1px, -2px) rotate(-1deg); }
+		20%  { -webkit-transform: translate(-3px, 0px)  rotate(1deg); }
+		30%  { -webkit-transform: translate(0px, 2px)   rotate(0deg); }
+		40%  { -webkit-transform: translate(1px, -1px)  rotate(1deg); }
+		50%  { -webkit-transform: translate(-1px, 1px)  rotate(-1deg); }
+		60%  { -webkit-transform: translate(-3px, -2px)  rotate(0deg); }
+		70%  { -webkit-transform: translate(2px, 1px)   rotate(-1deg); }
+		80%  { -webkit-transform: translate(-1px, -2px) rotate(1deg); }
+		90%  { -webkit-transform: translate(2px, -1px)   rotate(0deg); }
+		100% { -webkit-transform: translate(1px, -2px)  rotate(-1deg); }
+	}
+	.wibbly_wobbly{
+		-webkit-animation-name: 'spaceboots';
+		-webkit-animation-duration: 0.8s;
+		-webkit-transform-origin:50% 50%;
+		-webkit-animation-iteration-count: infinite;
+		-webkit-animation-timing-function: linear;    
+	}
+
+    </style>
+	<div id="frame"></div>
+    <div id="badge"><content select="file-drop-badge"></content></div>
+    <div id="text">
+        <div id="banner"><content select="file-drop-banner"></content></div>
+        <content></content>
+    </div>
+</template>
+<script>
+    Polymer('file-drop',{
+		dropenabled: true,
+		fullyshowing: true,
+		currentlyDragging: false,
+		fullyshowingChanged: function(from,val){
+			this.style.display = val || this.currentlyDragging  ? 'block' : 'none';
+			this.style.background = val ? '' : 'initial';
+			this.$.frame.style.border = val ? '' : 'none';
+		},
+		DocumentDragOver: function(e){
+			if(!this.dropenabled)
+				return;
+			this.currentlyDragging = true,
+			e.stopPropagation();
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'copy'; // Explicitly show this is a copy.
+			this.$.banner.classList.add('wibbly_wobbly');
+			this.style.display = 'block';
+			this.job('end-drag',this.DocumentDragEnd.bind(this),500);
+		},
+		DocumentDragEnd: function(){
+			this.currentlyDragging = false,
+			this.$.banner.classList.remove('wibbly_wobbly');
+			if(!this.fullyshowing)
+				this.style.display = 'none';
+		},
+		DocumentDropFile: function(e){
+			e.stopPropagation();
+			e.preventDefault();
+			this.fullyshowing = false;
+			this.DocumentDragEnd();
+			this.asyncFire('filesdropped',e.dataTransfer.files);
+		},
+		ready: function(){
+			window.document.ondragover = this.DocumentDragOver.bind(this);
+            window.document.ondrop = this.DocumentDropFile.bind(this);
+		}	 
+        })
+</script>    
+</polymer-element>

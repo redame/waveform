@@ -6,21 +6,32 @@
 <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
 <title>Cutting GUI</title>
 <link rel="stylesheet" type="text/css" href="main.css">
-<script src="polymer/platform.js"></script>
-<link rel="import" href="polymer/core-splitter.html">
-<link rel="import" href="polymer/core-tooltip.html">
-<link rel="import" href="polymer/core-icon-button.html">
-<link rel="import" href="polymer/core-toolbar.html">
-<link rel="import" href="polymer/paper-slider.html">
+<script src="bower_components/webcomponentsjs/webcomponents.min.js"></script>
+<link rel="import" href="bower_components/core-splitter/core-splitter.html">
+<link rel="import" href="bower_components/core-tooltip/core-tooltip.html">
+<link rel="import" href="bower_components/core-icon-button/core-icon-button.html">
+<link rel="import" href="bower_components/core-toolbar/core-toolbar.html">
+<link rel="import" href="bower_components/paper-slider/paper-slider.html">
 <link rel="import" href="tile-element.html">
 <link rel="import" href="cross-hair.html">
+<link rel="import" href="file-organiser.html">
+<link rel="import" href="file-drop.html">
 </head>
 
 <body>
 <core-iconset id="meta"></core-iconset>
 
-
 <div class="hidden_clipboard"></div>
+
+<file-drop id='the_file_drop' >
+    <file-drop-banner>drag &amp; drop files here</file-drop-banner>
+    <file-drop-badge>Tested with Chrome <img src="chromelogo.png" width="15px"/></file-drop-badge>
+    the following types of data files are recognised: 
+    <b><br>set | pos | tet | cut | clu</b><br>
+    you can drag further files onto the window at any point<br>
+    other file types will be ignored<br>
+    <a href="https://github.com/d1manson/waveform/tree/master#wiki" target="_blank">Go to <b>quickstart guide</b> on GitHub</a>
+</file-drop>
 
 <div class="floating_layer">
 		
@@ -238,34 +249,29 @@
 
 	<div class="side_panel" vertical layout>
 
-		<div class="side_panel_row side_panel_row" vertical layout>
-			<div class='button_group above_scrollable_area' id='tet_list'>
-				<div class='tetrode_title'>tetrode:</div>
-			</div>
-			<div class="scrollable_area" id="files_panel" flex>
-			<div class='exp_list' id='exp_list'></div>
-			</div>
-		</div>
-		
-		<core-splitter direction="up"></core-splitter>
-
-		<div class="side_panel_row" vertical layout>
-			<div class="grabbable" id="spatial_panel" flex>
-				<canvas id="posplot" class='poslayer' width="200" height="200"></canvas> 
-				<canvas id="posoverlay" class='poslayer' width="200" height="200"></canvas> 
-			</div>
-			<div class="info_summary">
-				<div class="info_summary_text"></div>
-				<canvas id="speedhist" width="50" height= "84"></canvas>
-				<div id="speedhist_labels" style="display:inline;position:relative;"><div style="position:absolute;right:0px;color:#888;font-size:8px;bottom:-2px;">60&nbsp;cm/s</div></div>
-				<canvas id="eegspect" width="50" height= "84"></canvas>
-			</div>
-		</div>
+		<file-organiser id='file_org' usefiledrop="the_file_drop"></file-organiser>
 
 		<core-splitter direction="up"></core-splitter>
+
+		<div flex vertical layout> <!-- can only split two siblings, so need to nest further siblings -->
 		
-		<div class="side_panel_row side_panel_row" flex vertical layout>
-			<div class="cluster_info above_scrollable_area">
+			<div>
+				<div class="grabbable" id="spatial_panel">
+					<canvas id="posplot" class='poslayer' width="200" height="200"></canvas> 
+					<canvas id="posoverlay" class='poslayer' width="200" height="200"></canvas> 
+				</div>
+				<div class="info_summary">
+					<div class="info_summary_text"></div>
+					<canvas id="speedhist" width="50" height= "84"></canvas>
+					<div id="speedhist_labels" style="display:inline;position:relative;"><div style="position:absolute;right:0px;color:#888;font-size:8px;bottom:-2px;">60&nbsp;cm/s</div></div>
+					<canvas id="eegspect" width="50" height= "84"></canvas>
+				</div>
+			</div>
+
+			<core-splitter direction="up"></core-splitter>
+
+			<div flex> 
+				<div class="cluster_info above_scrollable_area">
 					<div class="cluster_painter">
 						<core-tooltip label="destination group [e]" position="right">
 							<div class='cluster-sticker' id='painter-dest'>?</div> 
@@ -281,18 +287,17 @@
 					<div class="cluster_others">
 					</div>
 				</div>
-			<div id="cluster_panel" class="scrollable_area grabbable" flex>
-			<cross-hair id='cluster_crosshair' showBars=0></cross-hair>
+				<div id="cluster_panel" class="scrollable_area grabbable">
+				<cross-hair id='cluster_crosshair' showBars=0></cross-hair>
+				</div>
 			</div>
-		</div>
-	
-	</div>
+		</div> <!-- end nested split divs -->
+	</div> <!-- end sidebar -->
 
 	<core-splitter direction="left"></core-splitter>
 	
-
 	<div class="tilewall" flex>
-	<div class="tilewall_text">No data selected. Choose a trial from the available files.</div>
+		<div class="tilewall_text">No data selected. Choose a trial from the available files.</div>
 	</div>
 </div>
 
@@ -301,22 +306,6 @@
 
 
 <core-icon-button icon="menu" class="menu_toggle"></core-icon-button>
-
-
-<div class="file_drop">
-<div id="filestem_caption"></div>
-<div class="file_drop_text"><div class="drop_banner">drag &amp; drop files here</div>
-the following types of data files are recognised: 
-<b><br>set | pos | tet | cut | clu</b><br>
-you can drag further files onto the window at any point<br>
-other file types will be ignored<br>
-<div class="github_button github_button_filedrop">Go to <b>quickstart guide</b> on GitHub</div>
-</div>
-<div id="works_with_chrome">Tested with Chrome <img src="chromelogo.png" width="15px"/></div>
-<div id="filesystem_buttons"> <button id="filesystem_button">turn on FileAPIs</button>
-<button id="filesystem_load_button" style="display: none;">use existing files</button>
-</div>
-</div>
 
 
 <!-- public libraries and generic stuff for this app -->
@@ -330,9 +319,9 @@ other file types will be ignored<br>
 <!--<script src="webgl-debug.js"></script> -->
 
 <!-- T.PAR, T.CUT, and T.ORG look after the files and cuts-->
-<script src="parsefiles.js"></script>
-<script src="cut.js"></script>
-<script src="fileorganiser.js"></script>
+<!--<script src="parsefiles.js"></script>
+<script src="cut.js"></script> 
+<script src="fileorganiser.js"></script> -->
 
 <!-- main and T.Tool deal with the miscellaneous interaction tasks and persistence of settings etc.-->
 <script src="main.js"></script>
