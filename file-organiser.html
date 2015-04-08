@@ -133,34 +133,37 @@ And below that, i.e. each of the cut_k's, looks like this:
 	.group_bottom{
 	font-size:0px;
 	}
+	scrollable-area{
+		height: 100%;
+	}
 	</style>
 	<scrollable-area>
 	<scrollable-area-top class="tet-navigation">
 		<div class="tet-title">tetrode:</div>
-		<template repeat="{{tet_num in available_tet_nums}}">
-			<template if="{{tet_num}}">
-			<div class="button button-tet" selected="{{tet_num == tet_num}}" on-click="{{_tetButtonClick}}">{{tet_num}}</div>
+		<template repeat="{{t in available_tet_nums}}">
+			<template if="{{t}}">
+			<div class="button button-tet" selected="{{t == tet_num}}" on-click="{{_tetButtonClick}}">{{t}}</div>
 			</template>
 		</template>
 	</scrollable-area-top>
-	<template repeat="{{exp in exps}}">
-		<div class='button file-group' selected="{{exp == exp}}" on-click="{{_fileGroupClick}}">
+	<template repeat="{{x in exps}}">
+		<div class='button file-group' selected="{{x == exp}}" on-click="{{_fileGroupClick}}">
 			<div class="group_top">
-				<b>trial '{{exp.name}}'</b>&nbsp;&nbsp;
-				<template if={{exp.set_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.set</file-brick></template>
-				<template if={{exp.pos_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.pos</file-brick></template>
+				<b>trial '{{x.name}}'</b>&nbsp;&nbsp;
+				<template if={{x.set_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.set</file-brick></template>
+				<template if={{x.pos_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.pos</file-brick></template>
 			</div>
 			<div class="group_bottom">
-				<template repeat="{{tet,tet_num in exp.tets}}">
-					<template repeat="{{cut in tet.cuts}}"><file-brick colora="{{ cut.file != undefined ? '#500': '#005' }}" 
-																	   colorb="{{ cut.file != undefined ? '#fbb': '#bbf' }}" 
-															selected="{{tet_num == tet_num}}" 
-															superselected="{{ cut == cut }}"
-															draggable="{{ cut.inst != undefined }}"
+				<template repeat="{{tet,t in exp.tets}}">
+					<template repeat="{{c in tet.cuts}}"><file-brick colora="{{ c.file != undefined ? '#500': '#005' }}" 
+																	   colorb="{{ c.file != undefined ? '#fbb': '#bbf' }}" 
+															selected="{{t == tet_num}}" 
+															superselected="{{ c == cut }}"
+															draggable="{{ c.inst != undefined }}"
 															on-dragstart="{{ _cutBrickDragStart }}" on-dragend="{{_cutBrickDragEnd}}"
 															on-click="{{_cutBrickClick}}">{{cut.disp_name}}</file-brick> </template>
 					<template if={{tet.tet_file}}><file-brick 
-													selected="{{tet_num == tet_num}}"
+													selected="{{t == tet_num}}"
 													on-click="{{_tetButtonClick}}">~.{{tet_num}}</file-brick></template>
 				</template>
 			</div>
