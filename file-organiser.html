@@ -54,19 +54,27 @@ And below that, i.e. each of the cut_k's, looks like this:
 	margin: 2px;
 	overflow: hidden;
 	position: relative;
-	}
-	.inner{
+	min-width: 3px;
 	width: 3px;
 	}
-	:host(:hover) .inner,
-	.inner[selected="true"],
-	.inner[forevermedium="true"]{
+	:host(:hover) .outer[selected="false"] .inner{
+	width: auto;
+	position: absolute;
+	background: inherit;
+    z-index: 100;
+    box-shadow: 0px 3px 10px 0px #7B7878;
+	}
+	:host(:hover) .outer[selected="false"]{
+	overflow: initial;
+	}
+	.outer[selected="true"],
+	.outer[forevermedium="true"]{
 	width: auto;
 	}
 
 	</style>
-	<div class="outer" style="border-color:{{colora}};background:{{ superselected ? colora : colorb}};color:{{ superselected ? '#fff' : colora}}">
-	<div class="inner" selected="{{selected}}" forevermedium="{{forevermedium}}" style="border-color:{{colora}};background:{{ superselected ? colora : colorb}};color:{{ superselected ? '#fff' : colora}}">{{value}}</div>
+	<div class="outer"  selected="{{selected}}" forevermedium="{{forevermedium}}" style="border-color:{{colora}};background:{{ superselected ? colora : colorb}};color:{{ superselected ? '#fff' : colora}}">
+	<div class="inner" style="border-color:{{colora}};background:{{ superselected ? colora : colorb}};color:{{ superselected ? '#fff' : colora}}">{{value}}</div>
 	</div>
 </template>
 </polymer-element>
@@ -144,11 +152,13 @@ And below that, i.e. each of the cut_k's, looks like this:
 															draggable="{{ c.inst != undefined }}"
 															on-dragstart="{{ _cutBrickDragStart }}" on-dragend="{{_cutBrickDragEnd}}"
 															on-click="{{_cutBrickClick}}"
-															value="{{c.disp_name}}"></file-brick> </template>
+															value="{{c.disp_name}}"
+															forevermedium="false"></file-brick> </template>
 					<template if={{tet.tet_file}}><file-brick 
 													selected="{{t == tet_num}}"
 													on-click="{{_tetButtonClick}}"
-													value="~.{{t}}"></file-brick></template>
+													value="~.{{t}}"
+													forevermedium="false"></file-brick></template>
 					<div></template>
 				</template>
 			</div>
