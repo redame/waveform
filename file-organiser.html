@@ -44,23 +44,23 @@ And below that, i.e. each of the cut_k's, looks like this:
 	display: inline-block;
 	vertical-align: top;
 	font-size:12px;
-	border: 1px #000 solid;
-	background: #ddd;
-	color: #000;
-	padding: 2px;
-	height: 12px;
 	white-space: nowrap;
 	text-align: center;
 	margin: 2px;
 	overflow: hidden;
 	position: relative;
-	min-width: 3px;
-	width: 3px;
+	min-width: 6px;
+	width: 6px;
+	}
+	.inner{
+	border: 1px #000 solid;
+	background: #ddd;
+	color: #000;
+	padding: 2px;
 	}
 	:host(:hover) .outer[selected="false"] .inner{
 	width: auto;
 	position: absolute;
-	background: inherit;
     z-index: 100;
     box-shadow: 0px 3px 10px 0px #7B7878;
 	}
