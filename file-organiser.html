@@ -36,65 +36,38 @@ And below that, i.e. each of the cut_k's, looks like this:
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="scrollable-area.html">
 
-<polymer-element name="file-brick" noscript attributes='forevermedium colora colorb superselected'>
+<polymer-element name="file-brick" noscript attributes='forevermedium colora colorb superselected selected value'>
 <template>
 	<style>
-	:host{
+	.outer{
+	cursor: pointer;
 	display: inline-block;
-	margin: 2px;
-	width: 5px;
-	height: 20px; 
-	cursor: default;
-	position:relative;
 	vertical-align: top;
 	font-size:12px;
-	}
-	:host(:hover){
-	z-index:100;
-	}
-	.text{
-	display: inline;
 	border: 1px #000 solid;
 	background: #ddd;
 	color: #000;
-	position:absolute;
 	padding: 2px;
-	width: 2px;
 	height: 12px;
 	white-space: nowrap;
-	left:-2px;
-	overflow: hidden;
 	text-align: center;
+	margin: 2px;
+	overflow: hidden;
+	position: relative;
 	}
-	:host([selected="true"]){
-	width:auto;
+	.inner{
+	width: 3px;
 	}
-	.text:hover{
-	width:auto;
-	box-shadow: 0px 3px 10px 0px #bbb;
-	left:-4px;
-	border-width: 2px;
-	padding-bottom: 4px;
-	}
-	:host([selected="true"]) .text{
-	width:auto;
-	position:relative;
-	top:2px;
-	border-width: 2px;
-	padding-bottom: 2px;
-	}
-	:host([forevermedium]){
-	margin: 0px;
+	:host(:hover) .inner,
+	.inner[selected="true"],
+	.inner[forevermedium="true"]{
 	width: auto;
 	}
-	:host([forevermedium]) .text{
-	padding: 0px 2px 0px 2px;
-	width:auto;
-	position:relative;
-	border-width: 2px;
-	}
+
 	</style>
-	<div class="text" style="border-color:{{colora}};background:{{ superselected ? colora : colorb}};color:{{ superselected ? '#fff' : colora}}"><content></content></div>
+	<div class="outer" style="border-color:{{colora}};background:{{ superselected ? colora : colorb}};color:{{ superselected ? '#fff' : colora}}">
+	<div class="inner" selected="{{selected}}" forevermedium="{{forevermedium}}" style="border-color:{{colora}};background:{{ superselected ? colora : colorb}};color:{{ superselected ? '#fff' : colora}}">{{value}}</div>
+	</div>
 </template>
 </polymer-element>
 
@@ -136,6 +109,14 @@ And below that, i.e. each of the cut_k's, looks like this:
 	scrollable-area{
 		height: 100%;
 	}
+	.tet_group{
+		display: inline-block;
+		border: 1px rgba(0,0,0,0.5) solid;
+		border-width: 0px 0px 0px 1px;
+	}
+	.tet_group:first-of-type{
+		border-width: 0;
+	}
 	</style>
 	<scrollable-area>
 	<scrollable-area-top class="tet-navigation">
@@ -150,21 +131,25 @@ And below that, i.e. each of the cut_k's, looks like this:
 		<div class='button file-group' selected="{{x == exp}}" on-click="{{_fileGroupClick}}">
 			<div class="group_top">
 				<b>trial '{{x.name}}'</b>&nbsp;&nbsp;
-				<template if={{x.set_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.set</file-brick></template>
-				<template if={{x.pos_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium>~.pos</file-brick></template>
+				<template if={{x.set_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium="true" value="~.set"></file-brick></template>
+				<template if={{x.pos_file}}><file-brick colora='#552510' colorb='#ddb550' forevermedium="true" value="~.pos"></file-brick></template>
 			</div>
 			<div class="group_bottom">
-				<template repeat="{{tet,t in exp.tets}}">
+				<template repeat="{{tet,t in x.tets}}">
+				<template if="{{tet.cuts.length > 0 || tet.tet_file}}"><div class="tet_group">
 					<template repeat="{{c in tet.cuts}}"><file-brick colora="{{ c.file != undefined ? '#500': '#005' }}" 
 																	   colorb="{{ c.file != undefined ? '#fbb': '#bbf' }}" 
 															selected="{{t == tet_num}}" 
 															superselected="{{ c == cut }}"
 															draggable="{{ c.inst != undefined }}"
 															on-dragstart="{{ _cutBrickDragStart }}" on-dragend="{{_cutBrickDragEnd}}"
-															on-click="{{_cutBrickClick}}">{{c.disp_name}}</file-brick> </template>
+															on-click="{{_cutBrickClick}}"
+															value="{{c.disp_name}}"></file-brick> </template>
 					<template if={{tet.tet_file}}><file-brick 
 													selected="{{t == tet_num}}"
-													on-click="{{_tetButtonClick}}">~.{{t}}</file-brick></template>
+													on-click="{{_tetButtonClick}}"
+													value="~.{{t}}"></file-brick></template>
+					<div></template>
 				</template>
 			</div>
 			</div>
