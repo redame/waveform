@@ -1,0 +1,208 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="waveform-central.html">
+
+<polymer-element name="ratemap-generator.html">
+<script src="util_extend.js"></script>
+<script src="palettes.js"></script>
+
+<script>
+	function(){ //singleton pattern
+
+	var workerFunction = function(){
+        "use strict";
+        importScripts('util_async.js',  // adds "async" to global namespace
+        			   'Mlib.js' // adds M namespace to global namespace
+        			   );
+
+        // the following vars are initialised in init function called from main thread
+        var POS_W = null;
+        var POS_H = null;
+        var PALETTE_TIME = null;
+        var PALETTE_FLAG = null;
+
+     	var state_by_id = {};
+		var state = function(id, inds, gnum){
+			this.id = id;
+			this.inds = inds;
+			this.sent = false; //when this is true it means we provided a ratemap to the main thread matching the following settings...
+			this.gnum = gnum; //this is only relevant for spike map colors (i.e. not for ratemaps)
+			this.width = null;
+			this.height = null;
+			this.smoothing_bins = null;
+			this.bin_size_cm = null;
+			this.max = null;
+			
+			this.async_task = null; //if this is not null you can call .cancel to cancel it
+			return this;
+		};
+		state.prototype.invalidate = function(){
+			// Note that you should call this before letting the state go out of scope
+			if(this.sent)
+				main.invalidated_ratemap(this.id);
+			this.sent = false;
+			if(this.async_task)
+				this.async_task.cancel();
+			this.async_task = null;
+		}
+		state.prototype.matches = function(other){
+			for(p in other)
+				if(p in this && this[p] != other[p])
+					return false;
+			return true;
+		}
+
+     	var units_per_metre = null; //xy is probably expressed in milimeters (not pixels or cm)
+     	var xy_timebase = null;
+     	var settings = {
+     		smoothing_bins: 2,
+     		bin_size_cm: 1.5,
+     		max: null,
+     		show: true
+     	}
+     	var xy = null;
+     	var spike_times = null;
+     	var xy_bin_inds = null;
+     	var spike_bin_inds = null;
+     	var smooth_dwell = null;
+     	var make_ratemap = function(st){
+
+     		main.made_ratemap(/* TODO: pass buffer, size and id */)
+     	}
+
+     	var compute_pending = function(){
+     		if(xy && settings.bin_size_cm && !xy_bin_inds){
+     			var factor = 100/units_per_metre / settings.bin_size_cm;
+     			xy_bin_inds = M.clone(M.times(xy, factor), Uint8ClampedArray);
+     		}
+     		if(xy_bin_inds && spike_times && !spike_bin_inds){
+     			var factor = xy_timebase/spike_timebase;
+     			spike_bin_inds = new Uint8ClampedArray(
+     						M.pick(new Uint16Array(xy_bin_inds.buffer),  // pack two int8 into a single int16 for easy picking
+				     				M.times(spike_times, factor) ).buffer );
+     		}
+
+     		for(var st in state_by_id) 
+     			if(!st.matches(settings) || st.sent)
+	     			st.async_task = async(make_ratemap,st);
+     	}
+
+        var xy_change = function(new_xy, units_per_metre_new, xy_timebase_new){
+        	new_xy = new Uint16Array(new_xy);
+        	units_per_metre = units_per_metre_new;
+        	xy = new_xy;
+        	xy_timebase = xy_timebase_new;
+        	xy_bin_inds = null;
+        	spike_bin_inds = null;
+        	smooth_dwell = null;
+        	async.cancel_all();
+        	for(var st in state_by_id)
+        		st.invalidate();
+        	compute_pending();
+        }
+
+        var spike_times_change = function(new_times, spike_timebase_new){
+        	spike_times = new_times;
+        	spike_timebase = spike_timebase_new;
+        	spike_bin_inds = null;
+        	smooth_dwell = null;
+
+        	async.cancel_all();
+        	for(var st in state_by_id)
+        		st.invalidate();
+        	// TODO: I think it's going to be safe to convert to pos inds at this point
+        	compute_pending();
+        }
+
+        var settings_change = function(new_settings){
+        	for(p in new_settings)
+        		settings[p] = new_settings[p];
+        	compute_pending();
+        }
+
+        var cut_change = function(gnums, inds){
+        	/* inds is always an object with id's as keys. If the values are non-negative
+        	   it means they are new/modified gnums, otherwise they mean that the id is 
+        	   to be deleted.  The inds is also an object, and also ahs id's as keys.
+        	   The values are arrays of indices, which are the indices defining the given id.
+        	   These inidces are only provided once for each id, any subsequent changes of
+        	   gnum for the given id are not accompanied by the inds again.
+        	*/
+        	var ids = Object.keys(gnums);
+        	for(var i=0;i<ids.length;i++){
+        		var id = ids[i];
+        		if (gnums[id < 0){
+        			state_by_id[id].invalidate(); //cancels async task if there was one
+        			delete state_by_id[id];
+        		}else if(id in inds){
+        			state_by_id[id] = state(id, new Uint32Array(inds[id]), gnums[id])
+        		}else if(state_by_id[id].gnum != gnums[id]){
+        			state_by_id[id].invalidate();
+        			state_by_id[id].gnum = gnums[id];
+        		}
+        	}
+        	compute_pending();
+        }
+
+        var init = function(PALETTE_FLAG_in,PALETTE_TIME_in,POS_W_in,POS_H_in){
+        	PALETTE_FLAG = PALETTE_FLAG_in;
+        	PALETTE_TIME = PALETTE_TIME_in;
+			POS_W = POS_W_in;
+			POS_H = POS_H_in;
+        }
+
+	};
+	// ==== END OF WORKER ==========================
+
+
+	var Ratemap = function(buffer, width, height){
+		this.buffer = buffer;
+		this.width = width;
+		this.height = height;
+		return this;
+	};
+
+	var ratemaps_by_id = {}; // stores Ratemap instance..not really sure we need to store them actually
+
+	var made_ratemap(id,img_data,W,H){
+
+	};
+
+	var invalidated_ratemap(id){
+		delete ratemaps_by_id[id];
+	}
+
+	var theWorker = BuildBridgedWorker(workerFunction,
+										["xy_change*","spike_times_change*","settings_change","cut_change*"],
+										["made_ratemap*"],[made_ratemap,invalidated_ratemap]);
+
+	var central = document.createElement('waveform-central');
+	central.addEventListener('xy_change', function(e){
+		theWorker.xy_change(e.detail.xy.buffer,e.detail.units_per_metre, e.detail.timebase);
+
+		// TODO: ultimately make changes to ratemaps_by_id, perhaps putting them in a temporary cleared state too.
+	});
+
+	central.addEventListener('cut_change', function(e){
+
+		// TODO:
+	});
+
+	Polymer('ratemap-generator',{
+		ready: function(){
+			// There is only one ratemaps_by_id map, but each instance of this element needs to observe it.
+			this._obs = new ObjectObserver(ratemaps_by_id)
+			var self = this;
+			this._obs.open(function(added,removed,changed,getOldValFunc){
+				self.fire('change',extend({},added,removed,changed)); // we dont distinguish between the three kinds here
+			});
+		}
+		set_smoothing_bins: function(new_val){ theWorker.settings_change({smoothing_bins: new_val});}, 
+		set_bin_size_cm: function(new_val){ theWorker.settings_change({bin_size_cm: new_val});}, 
+		set_max: function(new_val){ theWorker.settings_change({max: new_val});}, 
+		set_show: function(new_val){ theWorker.settings_change({show: new_val});}
+
+	})
+
+	}();
+</script>
+</polymer-element>

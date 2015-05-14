@@ -1,0 +1,101 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<polymer-element name="waveform-central" attributes=''>
+<template>
+
+</template>
+<script src="worker-bridge.js"></script>
+<script src="parsefiles.js"></script>
+<script src="simple_callbacks.js"></script>	
+<script src="cut.js"></script>
+
+<script>
+	function(){ //singleton pattern
+
+	var LOADER = function(type, file){
+		var state = {file: file,
+					 alive: true,
+					 status: file ? 1 : 0,
+					 is_loading: false,
+					 data: null};
+
+		var callback = function(data)){
+			if(!state.alive)
+				return;
+			state.status = 2;
+			state.data = data;
+			this.fire('file_status_changed',{type: type, data: data});
+			state.status = 3;
+		}
+
+		state.load = function(){
+			if(state.is_loading || !file)
+				return;
+			state.is_loading = true;
+			if(type == "set")
+				PAR.LoadSet(file,callback);
+			else if(type == "pos")
+				PAR.LoadPos(file,callback);
+			else if(type == "tet")
+				PAR.LoadTetrode(file,callback);
+			else if(type == "cut")
+				PAR.LoadCut(file,callback);
+		}
+
+		return state;
+	}
+
+	var pos = LOADER('pos');
+	var set = LOADER('set');
+	var tet = LOADER('tet');
+	var cut = LOADER('cut');
+
+
+	Polymer('waveform-central',{
+		alwaysPrepare: true, // even if the element is not inserted into the dom consider it fully "alive" and observable etc.
+		get_cut_details: function(){
+			throw "not implemented yet"
+		},
+		load_files: function(set_file,pos_file,tet_file,cut_file){
+			/* you must provide all the files. If any are already loaded they will not be reloaded
+			  If any files do need to be loaded/cleared we update their status to 1/0 and then
+			  issue a 'file_status_changed' event for all files.  Following that event we actually
+			  initiate all the loading.  When each file is parsed it fires another 'file_status_changed'
+			  event.
+			*/
+			var any = false;
+			if(set.file != set_file){
+				set.alive = false;
+				set = LOADER(set_file);
+				any = true;
+			}
+			if(pos.file != pos_file){
+				pos.alive = false;
+				pos = LOADER(pos_file);
+				any = true;
+			}
+			if(tet.file != tet_file){
+				tet.alive = false;
+				tet = LOADER(tet_file);
+				any = true;
+			}
+			if(cut.file != cut_file){
+				cut.alive = false;
+				cut = LOADER(cut_file);
+				any = true;
+			}
+		
+			if(any){
+				this.fire('file_status_changed',{type: null});
+				set.load(); // this load method is a no-op if there is nothing to load
+				pos.load();
+				tet.load();
+				cut.load();
+			}
+			
+		},
+	});
+
+	}();
+</script>
+</polymer-element>

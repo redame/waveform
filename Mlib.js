@@ -5,7 +5,22 @@ Unfortunately this is a compelte mess in terms of N-dimensions, strides, in plac
 
 var M = {
 	IN_PLACE: {in_place:true}, //some of the functions below can take this as a flag and perform the calculation "in place", i.e. using one of the inputs as the output
-		
+	
+	Swap32: function(val) {
+		return   ((val & 0xFF) << 24)
+			   | ((val & 0xFF00) << 8)
+			   | ((val >> 8) & 0xFF00)
+			   | ((val >> 24) & 0xFF);
+	},
+
+	endian: (function(){
+		var b = new ArrayBuffer(2);
+		(new DataView(b)).setInt16(0,256,true);
+		return (new Int16Array(b))[0] == 256? 'L' : 'B';
+	})(), 
+
+	pi: 3.14159265,
+
 	sub: function(X,info){
 		//This function is an atempt to encapsulate all the indexing needs in one place and use an info object to explicitly state the indexing request
 		if('inds' in info){
@@ -34,10 +49,8 @@ var M = {
 	pick: function(from,indices){
 		// Take elements specified by indicies from the 1d array "from".
 		var result =  new from.constructor(indices.length); //make an array of the same type as the from array
-		
 		for(var i=0;i<indices.length;i++)
 			result[i] = from[indices[i]];
-			
 		return result;
 	},
 	
@@ -382,9 +395,10 @@ var M = {
 		//TODO: implement consistent behaviour using the IN_PLACE flag
 	},
 	
-	accumarray: function(inds,values,fn){
+	accumarray: function(inds,values,fn,S){
+		fn = fn || "sum";
+		S = S || (M.max(inds) + 1); //zero-based indexing, remember!
 		if(fn == "mean"){
-			var S = M.max(inds) + 1; //zero-based indexing, remember!
 			var result = new Float32Array(S); //we assume that whatever the class was we still want a float for the means
 			var counts = new Uint32Array(S);
 			for(var i=0;i<inds.length;i++){
@@ -395,16 +409,32 @@ var M = {
 				result[i] /= counts[i];
 			return result;
 		}else if (fn == "sum" && values == 1){
-    	    var S = M.max(inds) + 1; //zero-based indexing, remember!
 			var counts = new Uint32Array(S);
 			for(var i=0;i<inds.length;i++)
 				counts[inds[i]]++;
 			return counts;
-		}else
+		}else{
 			throw(fn + " is not implemetned, sorry");
-		
+		}
 	},
 	
+	accumarray_2d: function(inds,values,fn,S){
+		/* inds is: [0x 0y 1x 1y 2x 2y ... nx ny]
+		   S is: [Sx Sy]  (it is not optional for this _2d version) 	*/
+		fn = fn || "sum";
+		nX = S[0];
+		nY = S[1];
+		if (fn == "sum" && values == 1){
+			var counts = new Uint32Array(nX*nY);
+			var n = inds.length/2;
+			for(var i=0;i<n;i++)
+				result[inds[i*2+1]*nX + inds[i*2+0]]++;
+			return counts;
+		}else{
+			throw(fn + " is not implemetned, sorry");
+		}
+	},
+
     toInds: function(vals,binWidth){
         //as the moment this is just doing a division
         var ret = new Uint32Array(vals.length); //note we'll have problems with negative values
@@ -424,12 +454,12 @@ var M = {
 		
 	},
     
-    smooth: function(matrix,nX,nY){
+    smooth: function(matrix,nX,nY,W){
         //Note that there is no normalisation (for nan smooth user can smooth a counts matrix and then use rdivide)!!
         
 		var result = new matrix.constructor(matrix.length);
         var counts = new Uint32Array(matrix.length);
-		var W = 2; //kernle is box-car of size 2W+1
+		W = W === undefined ? 2 : W; //kernle is box-car of size 2W+1
 
 		for(var ky=-W;ky<=W;ky++)for(var kx=-W;kx<=W;kx++){//for each offset within the kernel square
 			var y0 = ky<0? 0 : ky;

@@ -1,0 +1,40 @@
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<polymer-element name="matshow-element" attributes="img_data width height max">
+
+
+<template>
+	<!-- TODO: show max, optionally -->
+	<canvas id="canv" style="image-rendering: pixelated;"></canvas>
+</template>
+
+<script>
+	"use strict";
+	Polymer('matshow-element',{
+		width: 100,
+		height: 100,
+		img_data: null, //arraybuffer
+		max: null, 
+		_render: function(){
+			this.$.canv.width = this.width;
+			this.$.canv.height = this.height;
+
+			var ctx = this.$.canv.getContext('2d');
+			var imData = ctx.createImageData(this.height,this.width);
+			imData.data.set(new Uint8ClampedArray(this.img_data));
+			ctx.putImageData(imData, 0, 0);
+		}
+		as_img: function(){
+			var img = document.createElement('img');
+			img.setAttribute('width',this.width + 'px'); 
+			img.setAttribute('height',this.height + 'px'); 
+			img.src = this.$.canv.toDataURL();
+			img.style.imageRendering = 'pixelated';
+			return img;
+		},
+		img_dataChanged: this._render,
+		widthChanged: this._render,
+		heightChanged: this._render
+	})
+</script>
+</polymer-element>

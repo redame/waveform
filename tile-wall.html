@@ -1,0 +1,91 @@
+<!--
+The job of the tile-wall is to build and maintain a list of groups.
+Each group must be supplied with an up-to-date ratemap, tc, and waves image, plus n value.
+
+TODO: we need to allow dragging etc.
+
+The *-generators are singletons and each contain a waveform-central (also a singleton). 
+Their settings are controlled elsewhere...if they are disabled, their values will simply be null/undefined.
+-->
+
+<link rel="import" href="bower_components/polymer/polymer.html">
+<link rel="import" href="tile-element.html">
+<link rel="import" href="waveform-central.html">
+<link rel="import" href="ratemap-generator.html">
+<link rel="import" href="tc-generator.html">
+<link rel="import" href="wave-generator.html">
+
+
+<polymer-element name="tile-wall">
+<template>
+
+	<waveform-central id="central" on-cut-change="{{cut_change}}"></waveform-central>
+
+	<ratemap-generator on-change="{{ratemap_updates}}"></ratemap-generator>
+	<tc-generator on-change="{{tc_updates}}"></tc-generator>
+	<wave-generator on-change="{{wave_updates}}"></wave-generator>
+
+	<template repeat="{{info, gnum in group_info_by_gnum}}">
+		<template if="{{info && info.n > 0}}">
+			<tile-element group_num="{{gnum}}"
+					  group_caption="{{info.n}}"
+					  rm="{{info.rm}}"
+					  tc="{{info.tc}}"
+					  wave="{{info.wave}}">
+			</tile-element>
+		</template>
+	</template>
+
+</template>
+
+<script>
+
+	Polymer('waveform-central',{
+		group_info_by_gnum: [], // TODO: initialise properly so that this works as non-singleton
+		group_info_by_id: {},
+
+		cut_change: function(e){
+			Object.keys(e.detail).forEach(function(id,v){
+				if(v && !this.group_info_by_id[v.id]){
+					// the id is a new one, so create a new info object
+					var new_info = {
+						id: id,
+						gnum: v.gnum,
+						n: v.n,
+						rm: undefined,
+						tc: undefined,
+						wave: undefined
+					};
+					this.group_info_by_id[id] = new_info;
+					this.group_info_by_gnum[v.gnum] = new_info;
+				}else if(v){
+					// the id already exists, but we need to update the gnum list
+					this.group_info_by_gnum[v.gnum] = this.group_info_by_id[id];
+				else{
+					// v is falsy, meaning the id is being deleted
+					var gnum = this.group_info_by_id[id].gnum;
+					this.group_info_by_gnum[gnum] = undefined;
+					delete this.group_info_by_id[id];
+				}
+			});
+		},
+		ratemap_updates: function(e){
+			Object.keys(e.detail).forEach(function(id,v){
+				this.group_info_by_id[id].rm = v;
+			});
+		},
+		tc_updates: function(e){
+			Object.keys(e.detail).forEach(function(id,v){
+				this.group_info_by_id[id].tc = v;
+			});
+		},		
+		wave_updates: function(e){
+			Object.keys(e.detail).forEach(function(id,v){
+				this.group_info_by_id[id].wave = v;
+			});
+
+		}
+	});
+
+</script>
+</polymer-element>

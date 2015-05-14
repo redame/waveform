@@ -3,17 +3,14 @@ CUSTOM ELEMENT: file organiser
 BY: DM
 
 This element presents an easy-to-naviagte list of all the data files that are avilable to the application (i.e. files that have been drag-dropped).
-It exposes an few important events which are fired whenever the user navigates between files:
-filesChanged
-cutModified
 
+There is one event:
 statustextchanged - this isn't fired very often. When file are availble it fires "No data selected. Choose a trial from the available files." later it may fire "Sorting and organising cut files..." and then null.
+
 
 Note this is intended to be used as a singleton..not sure what happens if there are multiple on the page
 
 Note we also have a file-brick element, but that is intended for private use within the file-organiser.
-
-
 
 The files are organised into a heirarchy, the top level of which is the file-organiser.exps property:
 	.exps: [ exp_1, exp_2,exp_3,...exp_n]   //sorted by experiment name
@@ -31,10 +28,18 @@ And below that, i.e. each of the cut_k's, looks like this:
 	{ file: FileObject or undefined,
 	  inst: CUT instance or undefined,
 	  date: undefined or result of Date.getTime(), //this is assigned during sorted if required
-	  disp_name: text shown in cut brick }
+	  disp_name: text shown in cut brick ,
+	  parent: TetObject}
+
+
+This element holds (aka "organises") all these files and allows the user to switch between them, however all the
+actual file loading details are dealt with by waveform-central, i.e. this element calls methods on the
+waveform-central singleton and file change events are fired by that other element.
 -->
+
 <link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="scrollable-area.html">
+<link rel="import" href="waveform-central.html">
 
 <polymer-element name="file-brick" noscript attributes='forevermedium colora colorb superselected selected value'>
 <template>
@@ -126,6 +131,7 @@ And below that, i.e. each of the cut_k's, looks like this:
 		border-width: 0;
 	}
 	</style>
+	<waveform-central id="central"></waveform-central> <!-- this is a singleton -->
 	<scrollable-area>
 	<scrollable-area-top class="tet-navigation">
 		<div class="tet-title">tetrode:</div>
@@ -166,11 +172,6 @@ And below that, i.e. each of the cut_k's, looks like this:
 	</template>
 	</scrollable-area>
 </template>
-
-<script src="worker-bridge.js"></script>
-<script src="parsefiles.js"></script>
-<script src="simple_callbacks.js"></script>	
-<script src="cut.js"></script>
 
 <script>
 "use strict";
@@ -230,7 +231,7 @@ var AssignCuts = function(){
 			if(cutFiles[i].isClu) //if we have a clu file, but we cant match against any names then we're stuck so just use filename base..
 				GotCutDetails.call(this,cutFiles[i],cutFiles[i].base);  //TODO: if at a later date we add files that allow us to match on the base then it would be nice to come back and reassign these files
 			else  //otherwise we can read the header to find out the experiment name (done asynchrously)...
-				PAR.LoadCut2(cutFiles[i].file,cutFiles[i].tet,cutFiles[i],GotCutDetails.bind(this)); 
+				this.$.central.get_cut_details(cutFiles[i].file,cutFiles[i].tet,cutFiles[i],GotCutDetails.bind(this)); 
 				
 		}
 		
@@ -241,7 +242,8 @@ var GotCutDetails = function(thePendingCut,base){
 	var tet_ob = GetTetOb.call(this,exp,thePendingCut.tet);
 	tet_ob.cuts.push({	file:thePendingCut.file,
 						disp_name: thePendingCut.file.name.replace(base,"~"),
-						info:{isClu: thePendingCut.isClu}
+						info:{isClu: thePendingCut.isClu},
+						parent: tet_ob
 					});
 	
 	//this pendingCut is no longer pending
@@ -305,77 +307,11 @@ var GetExpOb = function(exp_name){
 	return exp_ob;
 }
 
-var FilesDropped = function(e){
-	this.fire("statustextchanged","organising files...");
-	this._pendingfiles = e.detail;
-	this.async(FilesDropped_2)
-}
 
-var FilesDropped_2 = function(files){
-	var files = this._pendingfiles;
-	this._pendingfiles = null;
-	
-	for(var i =0; i <files.length;i++){ //for each file in the list...
-		var type = null, base = "",ext;
-		
-		// decide what "type" of file it is based on the one or more extensions it has
-		// we only want certain types of files...
-		if (ext = REGEX_FILE_EXT.exec(files[i].name)){
-			ext = ext[1].toLowerCase();
-			base = files[i].name.slice(0,files[i].name.length-ext.length-1);
 
-			if(ext=="cut") 					type = 1;
-			else if(ext == "pos") 			type = 2;
-			else if(ext == "set") 			type = 3;
-			else if(ext == "eeg")			type = 9;
-			else if(!isNaN(parseInt(ext)))
-				if(base.slice(-4) == ".clu")
-					if(base.slice(-9) == ".temp.clu") type = null; 
-					else							  type = 5; //clu file
-				else if(base.slice(-4) == ".fet") type = null; 
-				else if(base.slice(-4) == ".klg") type = null; 
-				else 							  type = 4; //tet file
-		}
-
-		
-		// Assign the file to the relevant place within the the exps structure.
-		// Or, in the case of cut/clu files, put it into a list of pending files
-		// which we need to do a bit more work on before assigning.
-		if(!type){
-			//unknown or unwanted file type
-		}else if(type == 1){
-			this._pendingCutFiles.push({file:files[i],base:base,tet:parseInt(base.match(/\d*$/)[0]),isClu:false});
-		}else if(type == 5){
-			this._pendingCutFiles.push({file:files[i],base:base,tet:parseInt(ext),isClu:true});
-		}else{	
-			var exp = GetExpOb.call(this,base);
-			if(type == 3){
-				exp.set_file = files[i];
-			}else if(type == 2){
-				exp.pos_file = files[i];
-			}else if(type == 9){
-				exp.eeg_files.push(files[i]);
-			}else if(type == 4){
-				GetTetOb.call(this,exp,parseInt(ext)).tet_file = files[i];
-			}		
-		}
-			
-	}// go on to next file...
-	
-	this.fire('statustextchanged', "Sorting and organising cut files...");
-	
-	if(this._pendingCutFiles.length == 0)
-		ReadAllFiles.call(this);
-	else
-		this.async(AssignCuts.bind(this)); //this is a bit more complicated so we leave it for a moment
-}
-
-var LoadSelection = function(){
-	console.log("need to switch to exp '" + (this.exp || {}).name + "' tet-" + this.tet_num + " cut=" + (this.cut || {}).disp_name);
-}
 
 Polymer('file-organiser',{
-	publish: {
+	publish: {  // these values are the target values, you need to check the _last_loaded_* to see what was actually loaded most recently
 		cut: null,
 		exp: null,
 		tet_num: 0,
@@ -386,6 +322,15 @@ Polymer('file-organiser',{
 	_pendingCutFiles: [], //holds the cut files that are yet to be assign to a trial
 	exps: [],
 	expFromName: {}, //the same entries as exps, but here it is key-value with key=exp name, rather than an array 
+	loadSelection: function(){
+		var tet_ob = GetTetOb(this.exp, this.tet_num);
+
+		// If cut no longer matches we select the obvious cut for the tet-exp
+		if(!this.cut || this.cut.parent != tet_ob)
+			this.cut = tet_ob.cuts[tet_ob.cuts.length-1];
+
+		this.$.central.load_files(this.exp.set_file,this.exp.pos_file,tet_ob.file,this.cut.file);
+	},
 	_tetButtonClick: function(e, detail, sender) {this.tet_num = e.target.templateInstance.model.t;},
 	_fileGroupClick: function(e, detail, sender) {this.exp = e.target.templateInstance.model.x;},
 	_cutBrickClick: function(e,detail,sender){this.tet_num = e.target.templateInstance.model.t; this.cut = e.target.templateInstance.model.c;},
@@ -403,25 +348,88 @@ Polymer('file-organiser',{
 		document.getElementById(this.usefiledrop).dropenabled = true;
 	},
 	cutChanged: function(from,to){
-		this.job('LoadSelection',LoadSelection,1);
+		this.job('LoadSelection',this.loadSelection,1);
 	},
 	tet_numChanged: function(from,to){
 		UpdateURLHistory((this.exp || {}).name,to);
-		this.job('LoadSelection',LoadSelection,1);
+		this.job('LoadSelection',this.loadSelection,1);
 	},
 	expChanged: function(from,to){
 		if(!from)
 			this.fire('statustextchanged','');
 		document.title = to.name + ' [Cutting GUI]';
 		UpdateURLHistory(to.name,this.tet_num);
-		this.job('LoadSelection',LoadSelection,1);
+		this.job('LoadSelection',this.loadSelection,1);
+	},
+	_filesDropped: function(e){
+		this.fire("statustextchanged","organising files...");
+		this._pendingfiles = e.detail;
+		this.async(this._filesDropped_2)
+	},
+	_filesDropped_2: function(files){
+		var files = this._pendingfiles;
+		this._pendingfiles = null;
+		
+		for(var i =0; i <files.length;i++){ //for each file in the list...
+			var type = null, base = "",ext;
+			
+			// decide what "type" of file it is based on the one or more extensions it has
+			// we only want certain types of files...
+			if (ext = REGEX_FILE_EXT.exec(files[i].name)){
+				ext = ext[1].toLowerCase();
+				base = files[i].name.slice(0,files[i].name.length-ext.length-1);
+
+				if(ext=="cut") 					type = 1;
+				else if(ext == "pos") 			type = 2;
+				else if(ext == "set") 			type = 3;
+				else if(ext == "eeg")			type = 9;
+				else if(!isNaN(parseInt(ext)))
+					if(base.slice(-4) == ".clu")
+						if(base.slice(-9) == ".temp.clu") type = null; 
+						else							  type = 5; //clu file
+					else if(base.slice(-4) == ".fet") type = null; 
+					else if(base.slice(-4) == ".klg") type = null; 
+					else 							  type = 4; //tet file
+			}
+
+			if(!type)
+				continue;//unknown or unwanted file type
+			
+			// Assign the file to the relevant place within the the exps structure.
+			// Or, in the case of cut/clu files, put it into a list of pending files
+			// which we need to do a bit more work on before assigning.
+			if(type == 1){
+				this._pendingCutFiles.push({file:files[i],base:base,tet:parseInt(base.match(/\d*$/)[0]),isClu:false});
+			}else if(type == 5){
+				this._pendingCutFiles.push({file:files[i],base:base,tet:parseInt(ext),isClu:true});
+			}else{	
+				var exp = GetExpOb.call(this,base);
+				if(type == 3){
+					exp.set_file = files[i];
+				}else if(type == 2){
+					exp.pos_file = files[i];
+				}else if(type == 9){
+					exp.eeg_files.push(files[i]);
+				}else if(type == 4){
+					GetTetOb.call(this,exp,parseInt(ext)).tet_file = files[i];
+				}		
+			}
+				
+		}// go on to next file...
+		
+		this.fire('statustextchanged', "Sorting and organising cut files...");
+		
+		if(this._pendingCutFiles.length == 0)
+			ReadAllFiles.call(this);
+		else
+			this.async(AssignCuts.bind(this)); //this is a bit more complicated so we leave it for a moment
 	},
 	ready: function(){
 		this.available_tet_nums = [];
 		this._pendingCutFiles = [];
 		this.exps = [];
 		this.expFromName = {};
-		document.getElementById(this.usefiledrop).addEventListener('filesdropped',FilesDropped.bind(this));
+		document.getElementById(this.usefiledrop).addEventListener('filesdropped',this._filesDropped.bind(this));
 	}
 })
 
