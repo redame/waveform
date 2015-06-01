@@ -6,11 +6,14 @@ Displays a cross-hair graphic rendered in svg. It has the following properties:
 	x,y,w,left,top
 -->
 
-<link rel="import" href="polymer/polymer.html">
-<polymer-element name="cross-hair" attributes="showbars r">
+<link rel="import" href="bower_components/polymer/polymer.html">
+
+<dom-module id="cross-hair" attributes="showbars r">
 <template>
 <svg></svg>
 </template>
+</dom-module>
+
 <script>
 var MakeSVGStr = function(x,y,w,left,top,r,showBars){
 	return "<svg style='pointer-events:none;position:absolute;left:" + left + "px;top:" + top + "px;width:" + (showBars & 1 ? w : x+r+2 )+ "px;height:" + (y+r+2) + "px' xmlns='http://www.w3.org/2000/svg' version='1.1'>"
@@ -25,7 +28,7 @@ var MakeSVGStr = function(x,y,w,left,top,r,showBars){
 				+ "</svg>";
 }
 
-Polymer('cross-hair',{
+Polymer({is: 'cross-hair',
 	x_: 0,
 	y_: 0,
 	w_: 0,

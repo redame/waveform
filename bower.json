@@ -1,0 +1,22 @@
+{
+  "name": "waveform",
+  "version": "1.1",
+  "homepage": "https://github.com/d1manson/waveform",
+  "authors": [
+    "Daniel Manson <d.manson.11@ucl.ac.uk>"
+  ],
+  "description": "spatial ephys GUI",
+  "main": "index.html",
+  "license": "-",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "polymer-1.0": "Polymer/polymer#1.0.0",
+    "polymer-0.5": "Polymer/polymer#0.5"
+  }
+}

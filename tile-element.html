@@ -48,10 +48,10 @@ A tile can be in one of several states, (normal,active,moving,proximate,hover, a
 		disabled=false	=> normal
 I'm not quite sure why it's so complciated, it would probably be better to just set the state directly.
 -->
-<link rel="import" href="polymer/polymer.html">
-<link rel="import" href="polymer/core-tooltip.html">
+<link rel="import" href="bower_components/polymer/polymer.html">
 <link rel="import" href="cross-hair.html">
-<polymer-element name="tile-element" attributes="group_num group_color_1 group_color_2 group_n group_spa_max">
+
+<dom-module id="tile-element" attributes="group_num group_color_1 group_color_2 group_n group_spa_max">
 <template>
 	<style>
 	:host {
@@ -175,6 +175,7 @@ I'm not quite sure why it's so complciated, it would probably be better to just 
 	<div id='blind' class='blind'>
 </template>
 
+</dom-module>
 
 <script>
 	"use strict";
@@ -234,7 +235,7 @@ I'm not quite sure why it's so complciated, it would probably be better to just 
 		//console.log("[g" + el.group_num + "] setting " + attr + "=" + val + " when state_=" + el.state_);
 	}
 	
-    Polymer('tile-element',{
+    Polymer({is: 'tile-element',
 		group_num: -1,
 		group_color_1: '#666',
 		group_color_2: '#f00',
@@ -419,5 +420,3 @@ I'm not quite sure why it's so complciated, it would probably be better to just 
 	});
 </script>
 
-  
-</polymer-element>
