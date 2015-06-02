@@ -234,6 +234,60 @@ T.WV = function(CanvasUpdateCallback, TILE_CANVAS_NUM, ORG,PALETTE_FLAG){
 			}
 		}
 	}
+    
+    
+    /*
+    var BuildVoltageDataBuffers_sub = function(oldData,newData,N){
+    	// This version works, but is actually slower than the more basic version above.
+    	oldData = new Uint32Array(oldData.buffer);
+        newData = new Uint16Array(newData.buffer);//TODO: use 32 here as well
+        var carry;
+        var D;
+        var q = 0;
+        var p;
+        var t;
+        for(var i=0; i<N; i++){ //for each spike
+            p = i;
+            for(var c=0; c<4; c++){ // for each channel
+                if (c == 0 || c == 2){
+                    D = oldData[++q]; // skip timestamp
+                    t = 0;  
+                }else{
+                    t = 1;
+                }
+                for(;t < 12; t++){ // for each of the 49 line segments within a wave, unrolled...
+                    newData[p] = D & 0xFFFF;                
+                    newData[p+N] = (D >>> 8) & 0xFFFF;         
+                    newData[p+N*2] = D >>> 16;
+                    carry = D >>> 24;
+                    D = oldData[++q];
+                    newData[p+N*3] = carry | (((D & 0xFF) << 8) >>> 0);
+	                p += N*4;
+                }
+                if (c == 0 || c == 2){
+                    // first half of D is last two bytes of wave, then two bytes of timestamp                    
+                    newData[p] = D & 0xFFFF;
+                    D = oldData[++q];
+                    // Now, first half of D is two bytes of timesatamp, second half is first two bytes of wave
+                    newData[p+N] = D >>> 16; 
+                    carry = D >>> 24;
+                    D = oldData[++q];
+                    // Now D is the 3rd, 4th, 5th and 6th bytes of wave (i.e. we now passed the 1st and 2nd)
+                    newData[p+N*2] = carry | (((D & 0xFF) << 8) >>> 0); 
+                    p += N*3;
+                }else{
+                	// D is simply the last 4 bytes of the wave
+                    newData[p] = D & 0xFFFF;
+                    newData[p+N] = (D >>> 8) & 0xFFFF;
+                    newData[p+N*2] = D >>> 16;
+                    p += N*3;
+                    q++; // go to end of wave (i.e. point to timestamp of next wave)
+                }
+            }
+        }
+	}
+	*/
+    
 	
 	var BuildVoltageDataBuffers = function(buffer,N){
 		// see UploadVoltage
